@@ -288,6 +288,13 @@
       "when": 1789597311868,
       "tag": "0040_clear_forgotten_one",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "5",
+      "when": 1790974204637,
+      "tag": "0041_auth_credentials",
+      "breakpoints": true
     }
   ]
 }

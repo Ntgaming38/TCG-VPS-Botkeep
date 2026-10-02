@@ -1,6 +1,6 @@
 import { eq, and, like, sql, desc, inArray, asc, isNotNull, isNull, lt, ne, or, gte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, products, purchases, sales, priceHistory, shops, saleLocations, activityLogs, chyusenEntries, marketplaceSyncConfig, marketplaceSyncErrors, loginEvents } from "../drizzle/schema";
+import { InsertUser, authCredentials, users, products, purchases, sales, priceHistory, shops, saleLocations, activityLogs, chyusenEntries, marketplaceSyncConfig, marketplaceSyncErrors, loginEvents } from "../drizzle/schema";
 import type { InsertProduct, InsertPurchase, InsertSale, InsertShop } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { fetchSnkrdunkPrice, fetchSnkrdunkProductMetadata, isSnkrdunkGenericImageUrl, isValidSnkrdunkUrl } from './snkrdunk';
@@ -82,6 +82,47 @@ export async function getUserByOpenId(openId: string) {
   if (!db) return undefined;
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
   return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getUserById(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  return result[0];
+}
+
+export async function getAuthCredentialByEmail(email: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.select().from(authCredentials).where(eq(authCredentials.email, email)).limit(1);
+  return result[0];
+}
+
+export async function createLocalAccount(input: {
+  openId: string;
+  name: string;
+  email: string;
+  passwordHash: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.transaction(async (tx) => {
+    await tx.insert(users).values({
+      openId: input.openId,
+      name: input.name,
+      email: input.email,
+      loginMethod: "password",
+      role: "user",
+    });
+    const [user] = await tx.select().from(users).where(eq(users.openId, input.openId)).limit(1);
+    if (!user) throw new Error("Could not create user");
+    await tx.insert(authCredentials).values({
+      userId: user.id,
+      email: input.email,
+      passwordHash: input.passwordHash,
+    });
+    return user;
+  });
 }
 
 export async function updateUserProfile(userId: number, data: { nickname?: string | null; avatarUrl?: string | null; avatarBorderColor?: string | null }) {

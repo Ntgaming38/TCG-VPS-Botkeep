@@ -15,6 +15,8 @@ sudo npm i -g pnpm pm2
 git clone <repo-da-boc> tcg && cd tcg
 cp .env.example .env
 # sửa .env: DATABASE_URL, JWT_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD, CRON_SECRET
+# Google OAuth (tùy chọn): GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
+# GOOGLE_REDIRECT_URI=https://<domain>/api/auth/google/callback
 pnpm install
 pnpm db:push
 pnpm build

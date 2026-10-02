@@ -13,4 +13,7 @@ export const ENV = {
   adminOpenId: process.env.ADMIN_OPENID ?? "local-admin",
   cronSecret: process.env.CRON_SECRET ?? "",
   storageDir: process.env.STORAGE_DIR ?? "./dist/public/uploads",
+  googleClientId: process.env.GOOGLE_CLIENT_ID ?? "",
+  googleClientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+  googleRedirectUri: process.env.GOOGLE_REDIRECT_URI ?? "",
 };
