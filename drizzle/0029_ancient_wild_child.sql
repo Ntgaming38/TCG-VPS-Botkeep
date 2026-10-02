@@ -1,0 +1,1 @@
+ALTER TABLE `chyusen_shop_suggestions` ADD `isPinned` int DEFAULT 0 NOT NULL;

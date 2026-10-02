@@ -1,0 +1,1 @@
+ALTER TABLE `chyusen_entries` ADD `resultCheckedAt` timestamp;

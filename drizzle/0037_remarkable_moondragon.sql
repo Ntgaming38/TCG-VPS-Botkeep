@@ -1,0 +1,1 @@
+ALTER TABLE `snkr_shop_items` ADD `pinnedOrder` int DEFAULT 0 NOT NULL;

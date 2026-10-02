@@ -1,0 +1,2 @@
+ALTER TABLE `chyusen_notification_settings` ADD `soundNewEnabled` int DEFAULT 0 NOT NULL;--> statement-breakpoint
+ALTER TABLE `chyusen_notification_settings` ADD `soundUrgentEnabled` int DEFAULT 0 NOT NULL;

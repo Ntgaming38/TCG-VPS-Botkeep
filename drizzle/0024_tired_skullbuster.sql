@@ -1,0 +1,1 @@
+ALTER TABLE `sales` MODIFY COLUMN `platform` enum('snkrdunk','mercari','yahoo','shop','offline','user','other') DEFAULT 'snkrdunk';

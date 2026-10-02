@@ -1,0 +1,1 @@
+ALTER TABLE `products` MODIFY COLUMN `type` enum('card','box','pack','junk_pack') NOT NULL;

@@ -1,0 +1,1 @@
+ALTER TABLE `chyusen_shop_suggestions` ADD `pinnedOrder` int DEFAULT 0 NOT NULL;

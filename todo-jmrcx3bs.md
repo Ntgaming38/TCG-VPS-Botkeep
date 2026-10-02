@@ -1,0 +1,102 @@
+# Project TODO
+
+- [x] Khảo sát cấu trúc dữ liệu, các trang quản lý hàng bán/hàng gom và thanh bên hiện có.
+- [x] Bổ sung bảng nhật ký hoạt động liên kết người dùng, đối tượng nghiệp vụ, hành động, dữ liệu thay đổi và thời điểm thực hiện.
+- [x] Ghi lịch sử cho các thao tác thêm, sửa, xóa hàng bán và hàng gom.
+- [x] Ghi nhận các hoạt động sử dụng quan trọng của người dùng mà hệ thống hiện có hỗ trợ.
+- [x] Thêm mục Lịch sử vào thanh bên và trang xem lịch sử có trạng thái tải, rỗng và lỗi rõ ràng.
+- [x] Viết kiểm thử Vitest cho cơ chế ghi và truy vấn lịch sử.
+- [x] Mở rộng nhật ký để lưu dữ liệu trước và sau thay đổi đối với các thao tác nghiệp vụ giao dịch.
+- [x] Mở rộng kiểm thử cho việc tạo dữ liệu nhật ký và khả năng hiển thị chi tiết thay đổi.
+- [x] Kiểm thử việc ghi dữ liệu trước và sau thay đổi tại các luồng nghiệp vụ tạo, sửa, xóa trọng yếu.
+- [x] Kiểm thử logic phân tích dữ liệu thay đổi được hiển thị trong trang Lịch sử.
+- [x] Xác minh giao diện và luồng nghiệp vụ, sau đó lưu phiên bản đã kiểm chứng.
+- [x] Kiểm thử snapshot nhật ký của các luồng sửa và xóa giao dịch mua, bán.
+- [x] Lưu phiên bản đã kiểm chứng sau khi hoàn thiện phạm vi kiểm thử.
+- [x] Bổ sung COMG! vào danh sách shop có sẵn trong biểu mẫu Mua Hàng.
+- [x] Phân màu hoạt động lịch sử: xóa đỏ, sửa cam, mua xanh lá và bán vàng.
+- [x] Làm nổi bật các trường dữ liệu đã thay đổi trong phần xem chi tiết lịch sử.
+- [x] Kiểm thử, xác minh trực quan và lưu phiên bản cho các điều chỉnh mới.
+- [x] Luôn hiển thị nhãn Xóa, Sửa, Mua hoặc Bán ngay sau tên sản phẩm trong Lịch sử trên điện thoại.
+- [x] Dùng nút nền màu phân loại với chữ đen cho nhãn thao tác để tăng độ tương phản trên giao diện sáng.
+- [x] Kiểm thử giao diện điện thoại và lưu phiên bản đã hoàn tất.
+- [x] Thiết kế truy vấn phân trang lịch sử với tổng số bản ghi và bộ lọc hiện hữu.
+- [x] Thêm cơ chế tải thêm lịch sử theo cursor cho mục Lịch Sử.
+- [x] Kiểm thử phân trang, xác minh giao diện và lưu phiên bản hoàn chỉnh.
+- [x] Trả về tổng số hoạt động phù hợp với bộ lọc cùng dữ liệu phân trang cursor.
+- [x] Hiển thị tiến độ số hoạt động đã tải trên tổng số, đồng thời làm rõ cơ chế tải thêm.
+- [x] Kiểm thử lại và lưu phiên bản sau khi hoàn thiện thông tin phân trang.
+- [x] Cho phép lưu 抽選 bằng dữ liệu thủ công khi link nguồn không đọc được hoặc không có dữ liệu tự động.
+- [x] Hiển thị lỗi đọc link theo hướng dẫn tiếp tục nhập tay, không vô hiệu hóa nút Lưu.
+- [x] Kiểm thử luồng link lỗi, link hợp lệ và lưu thủ công, sau đó lưu phiên bản.
+- [x] Kiểm thử độc lập việc lỗi đọc link chuyển sang bản nháp thủ công với URL trống.
+- [x] Kiểm thử độc lập việc link hợp lệ vẫn tạo bản nháp tự điền.
+- [x] Lưu phiên bản sau khi hoàn tất kiểm thử luồng đọc link.
+- [x] Tách quy đổi phản hồi đọc link hợp lệ thành bản nháp Chyusen có thể kiểm thử độc lập.
+- [x] Xác minh dữ liệu từ link hợp lệ tự điền đúng bản nháp, đồng thời lưu phiên bản mới.
+- [x] Đổi các trường ngày Chyusen sang định dạng chỉ ngày/tháng, không có giờ.
+- [x] Tự gán năm hiện tại theo thời điểm lưu và lưu nhất quán theo múi giờ Nhật Bản.
+- [x] Kiểm thử chuyển đổi ngày/tháng và xác minh giao diện điện thoại trước khi lưu phiên bản.
+- [x] Dùng cùng bản nháp ngày/tháng cho preview, tạo mới và chỉnh sửa Chyusen.
+- [x] Kiểm thử mở sửa bản ghi hiện có để bảo đảm ngày hiển thị dd/mm và lưu lại được.
+- [x] Xác minh biểu mẫu ngày/tháng ở giao diện điện thoại và lưu phiên bản mới.
+- [x] Kiểm thử payload cập nhật Chyusen từ ngày dd/mm để xác nhận năm tự gán và mutation update nhận đúng dữ liệu.
+- [x] Xác minh trực quan hộp thoại Thêm/Sửa Chyusen trên điện thoại với các ô ngày dd/mm.
+- [x] Lưu checkpoint sau khi hoàn tất kiểm thử và xác minh ngày/tháng.
+- [x] Tách payload submit Chyusen từ bản nháp dd/mm và kiểm thử năm tự gán trong mutation cập nhật.
+- [x] Mở trực tiếp hộp thoại Thêm Chyusen trên mobile để xác minh ô ngày dd/mm và hướng dẫn năm tự gán.
+- [x] Lưu checkpoint sau khi hoàn tất kiểm thử submit và xác minh hộp thoại.
+- [x] Tạo liên kết trực tiếp đến phần trường ngày trong hộp thoại Chyusen để hỗ trợ kiểm tra giao diện.
+- [x] Xác minh các ô dd/mm và chú thích tự gán năm trên mobile, sau đó lưu checkpoint mới.
+- [x] Tự động chèn dấu / khi nhập ngày tháng dd/mm trong biểu mẫu Chyusen.
+- [x] Hiển thị cảnh báo rõ ràng khi hạn đăng ký Chyusen đã qua theo thời điểm hiện tại.
+- [x] Kiểm thử định dạng ngày, cảnh báo quá hạn và lưu phiên bản hoàn chỉnh.
+- [x] Tính số ngày còn lại đến hạn đăng ký theo múi giờ Nhật Bản.
+- [x] Hiển thị số ngày còn lại cạnh cảnh báo trạng thái Chyusen phù hợp.
+- [x] Kiểm thử số ngày, xác minh giao diện và lưu phiên bản hoàn chỉnh.
+- [x] Thêm trạng thái hover và chạm rõ ràng cho các nút Sửa, Xóa, Mua và Bán trên điện thoại.
+- [x] Làm nổi bật số ngày còn lại của Chyusen khi sắp hết hạn bằng màu cảnh báo phù hợp.
+- [x] Kiểm thử tương tác, xác minh giao diện điện thoại và lưu phiên bản hoàn chỉnh.
+- [x] Kiểm thử riêng các lớp phản hồi hover/chạm dùng chung của Button cho thao tác trên điện thoại.
+- [x] Lưu checkpoint sau khi hoàn tất kiểm thử phản hồi nút và cảnh báo hạn gần.
+- [x] Hiển thị biểu tượng dấu chấm than cạnh nhãn hạn của Chyusen có hạn chót trong hôm nay.
+- [x] Bổ sung nhãn trợ năng cho biểu tượng cảnh báo và kiểm thử điều kiện hạn hôm nay.
+- [x] Xác minh giao diện, kiểm thử và lưu phiên bản hoàn chỉnh.
+- [x] Thêm tooltip có thể chạm/di chuột vào biểu tượng cảnh báo hạn chót hôm nay.
+- [x] Tự động sắp xếp mục Chyusen có hạn hôm nay lên đầu danh sách theo thời điểm Nhật Bản.
+- [x] Kiểm thử tooltip, thứ tự danh sách, xác minh giao diện và lưu phiên bản hoàn chỉnh.
+- [x] Bổ sung thao tác chạm để mở/đóng tooltip hạn Chyusen trên điện thoại.
+- [x] Xác minh trực tiếp tooltip đang mở cùng thứ tự ưu tiên hạn hôm nay trong danh sách.
+- [x] Lưu checkpoint sau khi hoàn tất kiểm thử và xác minh tooltip trên điện thoại.
+- [x] Hiển thị toast thành công sau khi tạo mới Chyusen.
+- [x] Hiển thị toast thành công sau khi cập nhật Chyusen.
+- [x] Kiểm thử thông báo, xác minh giao diện và lưu phiên bản hoàn chỉnh.
+- [x] Xác minh trực tiếp toast thành công tạo mới và cập nhật Chyusen ở góc màn hình.
+- [x] Lưu checkpoint sau khi xác minh toast thành công.
+- [x] Thiết kế xóa mềm và hoàn tác an toàn cho một mục Chyusen vừa xóa.
+- [x] Thêm nút Hoàn tác vào toast sau khi xóa Chyusen.
+- [x] Thêm liên kết Xem chi tiết vào toast thành công sau khi tạo hoặc cập nhật Chyusen.
+- [x] Thêm thanh tiến trình đếm ngược thời gian tự ẩn cho toast hành động của Chyusen.
+- [x] Kiểm thử xóa-hoàn tác, toast hành động và xác minh giao diện trước khi lưu phiên bản.
+- [x] Tạm dừng các nguồn theo dõi gắn với Chyusen khi xóa mềm.
+- [x] Khôi phục đúng trạng thái hoạt động của nguồn theo dõi khi hoàn tác xóa Chyusen.
+- [x] Kiểm thử xóa-hoàn tác có nguồn theo dõi và lưu checkpoint hoàn chỉnh.
+- [x] Lưu trạng thái hoạt động ban đầu của nguồn theo dõi khi xóa mềm Chyusen.
+- [x] Khôi phục chính xác nguồn vốn tắt hoặc bật sau khi hoàn tác Chyusen.
+- [x] Kiểm thử trạng thái nguồn trước/sau hoàn tác và lưu checkpoint hoàn chỉnh.
+- [x] Khảo sát toàn bộ thao tác xóa của Card, Box, Pack, Kho, Mua Hàng, Bán Hàng, Marketplace, Chyusen, nguồn theo dõi và dữ liệu liên quan.
+- [x] Thiết kế Thùng rác thống nhất để lưu snapshot dữ liệu đã xóa theo người dùng và loại dữ liệu.
+- [x] Chuyển các thao tác xóa sang ghi nhận vào Thùng rác và hỗ trợ khôi phục an toàn.
+- [x] Thêm mục Thùng rác bên dưới Cài đặt cùng trang xem, lọc và khôi phục dữ liệu đã xóa.
+- [x] Kiểm thử khôi phục toàn bộ loại dữ liệu và lưu phiên bản hoàn chỉnh.
+- [x] Đồng bộ mục Thùng rác khi hoàn tác xóa Chyusen từ toast trong thời gian 10 giây.
+- [x] Làm mới danh sách Thùng rác ngay sau khi hoàn tác Chyusen từ toast.
+- [x] Xác minh trực tiếp luồng xóa, mục xuất hiện trong Thùng rác và khôi phục thành công từ giao diện.
+- [x] Lưu checkpoint sau khi hoàn tất đồng bộ và xác minh Thùng rác.
+- [x] Xác định phần tử danh sách trong Lịch sử đang thiếu khóa React duy nhất.
+- [x] Bổ sung khóa ổn định cho các phần tử render từ danh sách trong Lịch sử.
+- [x] Kiểm thử, xác minh không còn cảnh báo khóa và lưu phiên bản sửa lỗi.
+- [x] Xác định bản ghi Lịch sử thực tế có dữ liệu trước/sau để mở phần chi tiết thay đổi.
+- [x] Xác minh trực tiếp phần chi tiết thay đổi không còn cảnh báo khóa React.
+- [x] Lưu checkpoint sau khi xác minh phần chi tiết Lịch sử.
+- [x] Hỗ trợ mở trực tiếp một hoạt động Lịch sử theo ID để kiểm tra phần chi tiết thay đổi.

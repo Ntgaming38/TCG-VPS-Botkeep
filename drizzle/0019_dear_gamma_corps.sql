@@ -1,0 +1,1 @@
+ALTER TABLE `products` MODIFY COLUMN `condition` varchar(50) DEFAULT 'A';

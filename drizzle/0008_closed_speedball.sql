@@ -1,0 +1,2 @@
+ALTER TABLE `chyusen_entries` ADD `externalProductId` varchar(255);--> statement-breakpoint
+CREATE INDEX `chyusen_entries_user_external_product_idx` ON `chyusen_entries` (`userId`,`externalProductId`);
