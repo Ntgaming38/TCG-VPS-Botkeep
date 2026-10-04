@@ -33,6 +33,22 @@ export const authCredentials = mysqlTable("auth_credentials", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
+export const emailAuthChallenges = mysqlTable("email_auth_challenges", {
+  id: int("id").autoincrement().primaryKey(),
+  email: varchar("email", { length: 320 }).notNull(),
+  purpose: mysqlEnum("purpose", ["registration", "password_reset"]).notNull(),
+  codeHash: varchar("codeHash", { length: 64 }).notNull(),
+  name: varchar("name", { length: 100 }),
+  passwordHash: varchar("passwordHash", { length: 255 }),
+  rememberMe: int("rememberMe").notNull().default(0),
+  expiresAt: timestamp("expiresAt").notNull(),
+  attempts: int("attempts").notNull().default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("email_auth_challenges_email_purpose_unique").on(table.email, table.purpose),
+  index("email_auth_challenges_expiry_idx").on(table.expiresAt),
+]);
+
 export const loginEvents = mysqlTable("login_events", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
@@ -189,7 +205,7 @@ export const snkrShopItems = mysqlTable("snkr_shop_items", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (table) => [
-  uniqueIndex("snkr_shop_items_user_url_unique").on(table.userId, table.sourceUrl),
+  index("snkr_shop_items_user_url_idx").on(table.userId),
   index("snkr_shop_items_user_updated_idx").on(table.userId, table.updatedAt),
   index("snkr_shop_items_user_pinned_idx").on(table.userId, table.isPinned, table.updatedAt),
 ]);
@@ -462,7 +478,7 @@ export const chyusenSources = mysqlTable("chyusen_sources", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (table) => [
-  uniqueIndex("chyusen_sources_user_url_unique").on(table.userId, table.sourceUrl),
+  index("chyusen_sources_user_url_idx").on(table.userId),
   index("chyusen_sources_active_idx").on(table.isActive),
 ]);
 

@@ -1,4 +1,4 @@
-CREATE TABLE `snkr_shop_items` (
+CREATE TABLE IF NOT EXISTS `snkr_shop_items` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`userId` int NOT NULL,
 	`name` varchar(255) NOT NULL,
@@ -9,9 +9,10 @@ CREATE TABLE `snkr_shop_items` (
 	`lastSyncedAt` timestamp,
 	`createdAt` timestamp NOT NULL DEFAULT (now()),
 	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
-	CONSTRAINT `snkr_shop_items_id` PRIMARY KEY(`id`),
-	CONSTRAINT `snkr_shop_items_user_url_unique` UNIQUE(`userId`,`sourceUrl`)
+	CONSTRAINT `snkr_shop_items_id` PRIMARY KEY(`id`)
 );
+--> statement-breakpoint
+CREATE UNIQUE INDEX `snkr_shop_items_user_url_unique` ON `snkr_shop_items` (`userId`, `sourceUrl`(700));
 --> statement-breakpoint
 CREATE TABLE `snkr_shop_price_history` (
 	`id` int AUTO_INCREMENT NOT NULL,

@@ -6,6 +6,7 @@ import path from "node:path";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerLocalAuthRoutes } from "./localAuth";
+import { registerEmailAuthRoutes } from "./emailAuthRoutes";
 import { registerGoogleAuthRoutes } from "./googleAuth";
 import { registerStorageProxy } from "./storageProxy";
 import { ENV } from "./env";
@@ -50,6 +51,7 @@ async function startServer() {
   app.use("/uploads", express.static(path.resolve(ENV.storageDir)));
   registerStorageProxy(app);
   registerLocalAuthRoutes(app);
+  registerEmailAuthRoutes(app);
   registerGoogleAuthRoutes(app);
   if (ENV.oAuthServerUrl) registerOAuthRoutes(app);
 

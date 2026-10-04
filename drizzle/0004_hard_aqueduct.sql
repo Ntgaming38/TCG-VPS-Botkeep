@@ -1,4 +1,4 @@
-CREATE TABLE `chyusen_entries` (
+CREATE TABLE IF NOT EXISTS `chyusen_entries` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`userId` int NOT NULL,
 	`title` varchar(255) NOT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE `chyusen_entries` (
 	CONSTRAINT `chyusen_entries_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
-CREATE TABLE `chyusen_history` (
+CREATE TABLE IF NOT EXISTS `chyusen_history` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`userId` int NOT NULL,
 	`entryId` int NOT NULL,
@@ -43,7 +43,7 @@ CREATE TABLE `chyusen_history` (
 	CONSTRAINT `chyusen_history_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
-CREATE TABLE `chyusen_monitor_config` (
+CREATE TABLE IF NOT EXISTS `chyusen_monitor_config` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`scheduleCronTaskUid` varchar(65),
 	`cronExpression` varchar(64) DEFAULT '0 0 */6 * * *',
@@ -52,7 +52,7 @@ CREATE TABLE `chyusen_monitor_config` (
 	CONSTRAINT `chyusen_monitor_config_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
-CREATE TABLE `chyusen_notifications` (
+CREATE TABLE IF NOT EXISTS `chyusen_notifications` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`userId` int NOT NULL,
 	`entryId` int,
@@ -67,7 +67,7 @@ CREATE TABLE `chyusen_notifications` (
 	CONSTRAINT `chyusen_notifications_user_key_unique` UNIQUE(`userId`,`notificationKey`)
 );
 --> statement-breakpoint
-CREATE TABLE `chyusen_sources` (
+CREATE TABLE IF NOT EXISTS `chyusen_sources` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`userId` int NOT NULL,
 	`entryId` int,
@@ -81,9 +81,10 @@ CREATE TABLE `chyusen_sources` (
 	`lastDetectedAt` timestamp,
 	`createdAt` timestamp NOT NULL DEFAULT (now()),
 	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
-	CONSTRAINT `chyusen_sources_id` PRIMARY KEY(`id`),
-	CONSTRAINT `chyusen_sources_user_url_unique` UNIQUE(`userId`,`sourceUrl`)
+	CONSTRAINT `chyusen_sources_id` PRIMARY KEY(`id`)
 );
+--> statement-breakpoint
+CREATE UNIQUE INDEX `chyusen_sources_user_url_unique` ON `chyusen_sources` (`userId`, `sourceUrl`(700));
 --> statement-breakpoint
 CREATE INDEX `chyusen_entries_user_idx` ON `chyusen_entries` (`userId`);--> statement-breakpoint
 CREATE INDEX `chyusen_entries_deadline_idx` ON `chyusen_entries` (`applicationEnd`);--> statement-breakpoint

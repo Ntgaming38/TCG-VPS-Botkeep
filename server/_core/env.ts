@@ -16,4 +16,11 @@ export const ENV = {
   googleClientId: process.env.GOOGLE_CLIENT_ID ?? "",
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
   googleRedirectUri: process.env.GOOGLE_REDIRECT_URI ?? "",
+  smtpHost: process.env.SMTP_HOST ?? "smtp.gmail.com",
+  smtpPort: Number(process.env.SMTP_PORT ?? 465),
+  smtpSecure: process.env.SMTP_SECURE !== "false",
+  smtpUser: process.env.SMTP_USER ?? "",
+  smtpPass: process.env.SMTP_PASS ?? "",
+  smtpFrom: process.env.SMTP_FROM || process.env.SMTP_USER || "",
+  emailCodeSecret: process.env.EMAIL_CODE_SECRET ?? process.env.JWT_SECRET ?? "",
 };

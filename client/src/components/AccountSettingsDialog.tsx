@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Camera, Check, Chrome, Compass, Copy, Crop, ExternalLink, Globe2, History, Laptop, Loader2, LogOut, Monitor, Move, ShieldCheck, Smartphone, UserRound } from "lucide-react";
+import { Camera, Check, Chrome, Compass, Copy, Crop, ExternalLink, Globe2, History, KeyRound, Laptop, Loader2, LogOut, Monitor, Move, ShieldCheck, Smartphone, UserRound } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -16,6 +16,7 @@ type AccountUser = {
   nickname?: string | null;
   email?: string | null;
   loginMethod?: string | null;
+  role?: "user" | "admin";
   avatarUrl?: string | null;
   avatarBorderColor?: string | null;
 };
@@ -60,6 +61,8 @@ async function createCroppedAvatar(source: string, zoom: number, offsetX: number
 function loginProviderLabel(loginMethod?: string | null) {
   if (loginMethod?.toLowerCase() === "google") return "Google";
   if (loginMethod?.toLowerCase() === "apple") return "Apple";
+  if (loginMethod?.toLowerCase() === "password") return "Email / mật khẩu";
+  if (loginMethod?.toLowerCase() === "local") return "Quản trị viên self-host";
   if (loginMethod?.toLowerCase() === "email") return "Email / Manus";
   return loginMethod || "Manus OAuth";
 }
@@ -83,6 +86,9 @@ export function AccountSettingsDialog({ open, onOpenChange, user }: AccountSetti
   const [emailCopied, setEmailCopied] = useState(false);
   const [logoutAllOpen, setLogoutAllOpen] = useState(false);
   const [logoutAllConfirmation, setLogoutAllConfirmation] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const uploadAvatar = trpc.auth.uploadAvatar.useMutation();
   const { data: loginEvents = [], isLoading: isLoginHistoryLoading } = trpc.auth.loginHistory.useQuery(undefined, { enabled: open, staleTime: 30_000 });
   const updateProfile = trpc.auth.updateProfile.useMutation({
@@ -100,6 +106,15 @@ export function AccountSettingsDialog({ open, onOpenChange, user }: AccountSetti
     },
     onError: (error) => toast.error(error.message || "Không thể đăng xuất khỏi các thiết bị."),
   });
+  const changePassword = trpc.auth.changePassword.useMutation({
+    onSuccess: () => {
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      toast.success("Đã đổi mật khẩu. Các phiên khác đã bị đăng xuất.");
+    },
+    onError: (error) => toast.error(error.message || "Không thể đổi mật khẩu."),
+  });
 
   useEffect(() => {
     if (!open) return;
@@ -107,13 +122,25 @@ export function AccountSettingsDialog({ open, onOpenChange, user }: AccountSetti
     setAvatarUrl(user?.avatarUrl || null);
     setBorderColor(normalizeAvatarBorderColor(user?.avatarBorderColor));
     setCropSource(null);
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
   }, [open, user?.avatarBorderColor, user?.avatarUrl, user?.name, user?.nickname]);
 
   const displayName = nickname.trim() || user?.name || "Người dùng";
   const provider = loginProviderLabel(user?.loginMethod);
   const isGoogleLogin = user?.loginMethod?.toLowerCase() === "google";
+  const canChangePassword = user?.loginMethod?.toLowerCase() === "password" || (user?.role === "admin" && user?.loginMethod?.toLowerCase() === "local");
   const securityUrl = isGoogleLogin ? "https://support.google.com/accounts/answer/41078" : "https://manus.im";
   const currentDeviceLabel = typeof navigator === "undefined" ? null : getSessionDeviceLabel(navigator.userAgent);
+
+  const submitPasswordChange = () => {
+    if (newPassword !== confirmPassword) {
+      toast.error("Mật khẩu xác nhận không khớp.");
+      return;
+    }
+    changePassword.mutate({ currentPassword, newPassword });
+  };
 
   const handleAvatarSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -218,15 +245,37 @@ export function AccountSettingsDialog({ open, onOpenChange, user }: AccountSetti
             <p className="text-xs text-muted-foreground">Nickname sẽ thay tên tài khoản ở thanh bên. Để trống để dùng tên đăng nhập gốc.</p>
           </section>
 
+          {canChangePassword && <section className="space-y-3 rounded-xl border border-border bg-secondary/15 p-4">
+            <div className="flex items-center gap-2"><KeyRound className="h-4 w-4 text-primary" /><p className="font-semibold">Đổi mật khẩu</p></div>
+            <p className="text-xs text-muted-foreground">Mật khẩu mới cần ít nhất 8 ký tự. Các thiết bị khác sẽ phải đăng nhập lại.</p>
+            <div className="space-y-2">
+              <Label htmlFor="current-password">Mật khẩu hiện tại</Label>
+              <Input id="current-password" type="password" autoComplete="current-password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} maxLength={128} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-password">Mật khẩu mới</Label>
+              <Input id="new-password" type="password" autoComplete="new-password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} minLength={8} maxLength={128} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Xác nhận mật khẩu mới</Label>
+              <Input id="confirm-password" type="password" autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} minLength={8} maxLength={128} />
+            </div>
+            <div className="flex justify-end">
+              <Button type="button" onClick={submitPasswordChange} disabled={changePassword.isPending || currentPassword.length === 0 || newPassword.length < 8 || confirmPassword.length < 8}>
+                {changePassword.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Cập nhật mật khẩu
+              </Button>
+            </div>
+          </section>}
+
           <section className="rounded-xl border border-border bg-secondary/15 p-4">
             <div className="flex items-center gap-2"><Laptop className="h-4 w-4 text-primary" /><p className="font-semibold">Thiết bị đăng nhập gần đây</p></div>
             <p className="mt-1 text-xs text-muted-foreground">Danh sách hiển thị các thiết bị đã dùng để đăng nhập tài khoản này gần đây.</p>
             {isLoginHistoryLoading ? <p className="mt-3 text-xs text-muted-foreground">Đang tải lịch sử...</p> : loginEvents.length ? <div className="mt-3 space-y-2">{loginEvents.map((event, index) => { const deviceName = event.deviceLabel || "Thiết bị không xác định"; const isCurrentDevice = index === 0 && deviceName === currentDeviceLabel; const DeviceIcon = /iPhone|iPad|Android/.test(deviceName) ? Smartphone : /Mac|Windows|Linux/.test(deviceName) ? Monitor : Laptop; const BrowserIcon = deviceName.includes("Chrome") ? Chrome : deviceName.includes("Safari") ? Compass : Globe2; return <div key={event.id} className="flex items-center justify-between gap-3 border-b border-border/60 pb-2 last:border-0 last:pb-0"><div className="flex min-w-0 items-center gap-2"><div className="flex shrink-0 items-center gap-0.5 text-primary"><DeviceIcon className="h-4 w-4" /><BrowserIcon className="h-3.5 w-3.5" /></div><div className="min-w-0"><div className="flex flex-wrap items-center gap-1.5"><p className="truncate text-xs font-semibold">{deviceName}</p>{isCurrentDevice && <span className="rounded-full border border-emerald-400/40 bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300">Thiết bị hiện tại</span>}</div><span className="text-[11px] text-muted-foreground">{loginProviderLabel(event.loginMethod)}</span></div></div><time className="shrink-0 text-right text-[11px] text-muted-foreground">{new Date(event.createdAt).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" })}</time></div>; })}</div> : <p className="mt-3 text-xs text-muted-foreground">Lịch sử sẽ xuất hiện sau lần đăng nhập tiếp theo.</p>}
           </section>
 
-          <section className="rounded-xl border border-sky-400/30 bg-sky-500/10 p-4">
+          {!canChangePassword && <section className="rounded-xl border border-sky-400/30 bg-sky-500/10 p-4">
             <div className="flex gap-3"><ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-sky-300" /><div><p className="font-semibold text-sky-100">Bảo mật đăng nhập</p><p className="mt-1 text-xs leading-5 text-sky-100/80">Bạn đang đăng nhập bằng <strong>{provider}</strong>. TCG Manager không lưu mật khẩu riêng, vì vậy mật khẩu cần được đổi trực tiếp tại nhà cung cấp đăng nhập.</p>{isGoogleLogin && <p className="mt-2 text-xs leading-5 text-sky-100/80">Liên kết dưới đây mở hướng dẫn chính thức của Google thay vì trang tài khoản trực tiếp, giúp tránh lỗi quyền truy cập 403 khi phiên đăng nhập Google không phù hợp.</p>}<ol className="mt-3 list-decimal space-y-1 pl-4 text-xs leading-5 text-sky-100/90">{isGoogleLogin ? <><li>Mở hướng dẫn chính thức của Google bằng nút bên dưới.</li><li>Đăng nhập đúng tài khoản Google đang dùng với TCG Manager.</li><li>Chọn <strong>Đổi mật khẩu</strong>, xác minh danh tính và đặt mật khẩu mới.</li><li>Quay lại TCG Manager; phiên đăng nhập hiện tại có thể cần đăng nhập lại.</li></> : <><li>Mở trang quản lý của nhà cung cấp đăng nhập.</li><li>Đăng nhập đúng tài khoản và tìm mục bảo mật hoặc mật khẩu.</li><li>Đổi mật khẩu theo hướng dẫn của nhà cung cấp.</li></>}</ol><a href={securityUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center text-xs font-semibold text-sky-200 hover:text-white hover:underline">{isGoogleLogin ? "Hướng dẫn đổi mật khẩu Google" : `Quản lý hoặc đổi mật khẩu ${provider}`}<ExternalLink className="ml-1.5 h-3.5 w-3.5" /></a></div></div>
-          </section>
+          </section>}
 
           <section className="rounded-xl border border-red-400/30 bg-red-500/10 p-4">
             <div className="flex items-start justify-between gap-3"><div><p className="font-semibold text-red-100">Đăng xuất khỏi tất cả thiết bị</p><p className="mt-1 text-xs leading-5 text-red-100/80">Thu hồi mọi phiên TCG Manager đang hoạt động, bao gồm thiết bị hiện tại. Sau đó bạn cần đăng nhập lại.</p></div><Button type="button" size="sm" className="shrink-0 bg-red-600 text-white hover:bg-red-700" onClick={() => { setLogoutAllConfirmation(""); setLogoutAllOpen(true); }}><LogOut className="mr-1.5 h-3.5 w-3.5" />Đăng xuất tất cả</Button></div>

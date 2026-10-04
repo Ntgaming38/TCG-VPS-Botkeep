@@ -295,6 +295,34 @@
       "when": 1790974204637,
       "tag": "0041_auth_credentials",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "5",
+      "when": 1790998119630,
+      "tag": "0042_fix_chyusen_url_index",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "5",
+      "when": 1790998172615,
+      "tag": "0043_fix_snkr_shop_url_index",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "5",
+      "when": 1790998796152,
+      "tag": "0044_email_auth_challenges",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "5",
+      "when": 1791002961236,
+      "tag": "0045_remember_login",
+      "breakpoints": true
     }
   ]
 }

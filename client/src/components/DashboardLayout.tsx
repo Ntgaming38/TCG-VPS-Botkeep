@@ -29,7 +29,6 @@ import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
-import { SidebarAIAssistant } from "./SidebarAIAssistant";
 import { trpc } from "@/lib/trpc";
 import { getUnreadChyusenCount } from "@shared/chyusenNotifications";
 import { shouldPlayChyusenAlert } from "@shared/chyusenNotificationFilter";
@@ -290,7 +289,6 @@ function DashboardLayoutContent({
           </SidebarContent>
 
           <SidebarFooter className="p-3 pt-4">
-            <SidebarAIAssistant />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex min-h-16 w-full items-center gap-3.5 rounded-xl px-2.5 py-2.5 text-left transition-colors hover:bg-sidebar-accent focus:outline-none group-data-[collapsible=icon]:justify-center">

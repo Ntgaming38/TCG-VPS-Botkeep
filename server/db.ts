@@ -1,6 +1,6 @@
 import { eq, and, like, sql, desc, inArray, asc, isNotNull, isNull, lt, ne, or, gte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, authCredentials, users, products, purchases, sales, priceHistory, shops, saleLocations, activityLogs, chyusenEntries, marketplaceSyncConfig, marketplaceSyncErrors, loginEvents } from "../drizzle/schema";
+import { InsertUser, authCredentials, emailAuthChallenges, users, products, purchases, sales, priceHistory, shops, saleLocations, activityLogs, chyusenEntries, marketplaceSyncConfig, marketplaceSyncErrors, loginEvents } from "../drizzle/schema";
 import type { InsertProduct, InsertPurchase, InsertSale, InsertShop } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { fetchSnkrdunkPrice, fetchSnkrdunkProductMetadata, isSnkrdunkGenericImageUrl, isValidSnkrdunkUrl } from './snkrdunk';
@@ -98,6 +98,20 @@ export async function getAuthCredentialByEmail(email: string) {
   return result[0];
 }
 
+export async function getAuthCredentialByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.select().from(authCredentials).where(eq(authCredentials.userId, userId)).limit(1);
+  return result[0];
+}
+
+export async function upsertAuthCredential(userId: number, email: string, passwordHash: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(authCredentials).values({ userId, email, passwordHash })
+    .onDuplicateKeyUpdate({ set: { email, passwordHash, updatedAt: new Date() } });
+}
+
 export async function createLocalAccount(input: {
   openId: string;
   name: string;
@@ -122,6 +136,85 @@ export async function createLocalAccount(input: {
       passwordHash: input.passwordHash,
     });
     return user;
+  });
+}
+
+export async function changeLocalAccountPassword(userId: number, passwordHash: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.transaction(async (tx) => {
+    const [credential] = await tx.select().from(authCredentials).where(eq(authCredentials.userId, userId)).limit(1);
+    if (!credential) return undefined;
+    await tx.update(authCredentials).set({ passwordHash }).where(eq(authCredentials.id, credential.id));
+    await tx.update(users).set({ sessionVersion: sql`${users.sessionVersion} + 1` }).where(eq(users.id, userId));
+    const [user] = await tx.select().from(users).where(eq(users.id, userId)).limit(1);
+    return user;
+  });
+}
+
+export type EmailAuthPurpose = "registration" | "password_reset";
+
+export async function getEmailAuthChallenge(email: string, purpose: EmailAuthPurpose) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [challenge] = await db.select().from(emailAuthChallenges)
+    .where(and(eq(emailAuthChallenges.email, email), eq(emailAuthChallenges.purpose, purpose)))
+    .limit(1);
+  return challenge;
+}
+
+export async function upsertEmailAuthChallenge(input: {
+  email: string;
+  purpose: EmailAuthPurpose;
+  codeHash: string;
+  name?: string | null;
+  passwordHash?: string | null;
+  rememberMe?: number;
+  expiresAt: Date;
+  createdAt: Date;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(emailAuthChallenges).values({ ...input, attempts: 0 })
+    .onDuplicateKeyUpdate({
+      set: {
+        codeHash: input.codeHash,
+        name: input.name ?? null,
+        passwordHash: input.passwordHash ?? null,
+        rememberMe: input.rememberMe ?? 0,
+        expiresAt: input.expiresAt,
+        attempts: 0,
+        createdAt: input.createdAt,
+      },
+    });
+}
+
+export async function incrementEmailAuthAttempts(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(emailAuthChallenges)
+    .set({ attempts: sql`${emailAuthChallenges.attempts} + 1` })
+    .where(eq(emailAuthChallenges.id, id));
+}
+
+export async function deleteEmailAuthChallenge(email: string, purpose: EmailAuthPurpose) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(emailAuthChallenges)
+    .where(and(eq(emailAuthChallenges.email, email), eq(emailAuthChallenges.purpose, purpose)));
+}
+
+export async function completeEmailPasswordReset(email: string, passwordHash: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.transaction(async (tx) => {
+    const [credential] = await tx.select().from(authCredentials).where(eq(authCredentials.email, email)).limit(1);
+    if (!credential) return false;
+    await tx.update(authCredentials).set({ passwordHash }).where(eq(authCredentials.id, credential.id));
+    await tx.update(users)
+      .set({ sessionVersion: sql`${users.sessionVersion} + 1` })
+      .where(eq(users.id, credential.userId));
+    return true;
   });
 }
 

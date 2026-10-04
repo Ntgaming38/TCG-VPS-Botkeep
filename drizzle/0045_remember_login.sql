@@ -1,0 +1,1 @@
+ALTER TABLE `email_auth_challenges` ADD `rememberMe` int DEFAULT 0 NOT NULL;

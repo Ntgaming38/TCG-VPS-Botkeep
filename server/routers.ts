@@ -1,4 +1,5 @@
-import { COOKIE_NAME } from "@shared/const";
+import { COOKIE_NAME, REMEMBERED_SESSION_MS } from "@shared/const";
+import { TRPCError } from "@trpc/server";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { LOGOUT_ALL_CONFIRMATION } from "../shared/sessionDevice";
 import { systemRouter } from "./_core/systemRouter";
@@ -6,6 +7,8 @@ import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { parse as parseCookieHeader } from "cookie";
 import * as db from "./db";
+import { sdk } from "./_core/sdk";
+import { hashPassword, verifyPassword } from "./_core/passwordAuth";
 import { invokeLLM } from "./_core/llm";
 import { extractAssistantText } from "./aiResponse";
 import { buildTcgAssistantSystemPrompt } from "./tcgAssistantPrompt";
@@ -87,6 +90,36 @@ export const appRouter = router({
           avatarUrl: input.avatarUrl,
           avatarBorderColor: input.avatarBorderColor,
         });
+      }),
+    changePassword: protectedProcedure
+      .input(z.object({
+        currentPassword: z.string().min(1).max(128),
+        newPassword: z.string().min(8).max(128),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const canChangePassword = ctx.user.loginMethod === "password" || (ctx.user.role === "admin" && ctx.user.loginMethod === "local");
+        if (!canChangePassword) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Tài khoản này đổi mật khẩu tại nhà cung cấp đăng nhập." });
+        }
+        const credential = await db.getAuthCredentialByUserId(ctx.user.id);
+        if (!credential || !(await verifyPassword(input.currentPassword, credential.passwordHash))) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Mật khẩu hiện tại không đúng." });
+        }
+        if (await verifyPassword(input.newPassword, credential.passwordHash)) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Mật khẩu mới phải khác mật khẩu hiện tại." });
+        }
+        const updatedUser = await db.changeLocalAccountPassword(ctx.user.id, await hashPassword(input.newPassword));
+        if (!updatedUser) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy thông tin mật khẩu của tài khoản." });
+        const sessionToken = await sdk.createSessionToken(updatedUser.openId, {
+          name: updatedUser.name || updatedUser.email || "User",
+          sessionVersion: updatedUser.sessionVersion,
+          expiresInMs: REMEMBERED_SESSION_MS,
+        });
+        ctx.res.cookie(COOKIE_NAME, sessionToken, {
+          ...getSessionCookieOptions(ctx.req),
+          maxAge: REMEMBERED_SESSION_MS,
+        });
+        return { success: true } as const;
       }),
     uploadAvatar: protectedProcedure
       .input(z.object({ imageDataUrl: z.string().trim().min(64).max(4_500_000) }))
