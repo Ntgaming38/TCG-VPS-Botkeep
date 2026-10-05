@@ -82,8 +82,16 @@ export default function DashboardLayout({
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full">
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950">
+        <div className="absolute inset-0">
+          <img
+            src="/login-bg.png"
+            alt="Pikachu và Lucario trên nền đăng nhập TCG Manager"
+            className="login-background-image h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-slate-950/60" />
+        </div>
+        <div className="relative z-10 flex w-full max-w-md flex-col items-center gap-8 p-8">
           <div className="flex flex-col items-center gap-4">
             <h1 className="pokemon-logo-text text-4xl">POKÉMON</h1>
             <p className="text-sm text-muted-foreground text-center">
