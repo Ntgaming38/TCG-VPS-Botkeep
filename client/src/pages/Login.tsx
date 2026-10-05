@@ -102,8 +102,9 @@ export default function Login() {
   }[screen];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4">
-      <div className="w-full max-w-sm space-y-4 rounded-xl border border-slate-800 bg-slate-900 p-6">
+    <div className="relative min-h-screen flex items-center justify-center px-4 bg-slate-950 bg-cover bg-center" style={{ backgroundImage: "url('/login-bg.png')", backgroundSize: "cover", backgroundPosition: "center" }}>
+      <div className="absolute inset-0 bg-slate-950/60" />
+      <div className="relative w-full max-w-sm space-y-4 rounded-xl border border-slate-800 bg-slate-900 p-6">
         <div className="space-y-2">
           <h1 className="text-center text-2xl font-bold tracking-widest text-yellow-400">TCG MANAGER</h1>
           <p className="text-center text-xs text-slate-400">{title}</p>
@@ -131,11 +132,11 @@ export default function Login() {
           </div>}
           {(isEmailStep || screen === "forgot_password") && <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required />
+            <Input id="email" name="username" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username email" required />
           </div>}
           {(screen === "login" || screen === "register") && <div className="space-y-2">
             <Label htmlFor="password">Mật khẩu</Label>
-            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={screen === "login" ? "current-password" : "new-password"} minLength={screen === "register" ? 8 : undefined} maxLength={128} required />
+            <Input id="password" name="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={screen === "login" ? "current-password" : "new-password"} minLength={screen === "register" ? 8 : undefined} maxLength={128} required />
             {screen === "register" && <p className="text-xs text-slate-400">Mật khẩu cần ít nhất 8 ký tự.</p>}
           </div>}
           {isEmailStep && <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-300">

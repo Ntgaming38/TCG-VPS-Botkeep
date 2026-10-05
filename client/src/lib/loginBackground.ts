@@ -1,4 +1,5 @@
-export const DEFAULT_LOGIN_BACKGROUND_URL = "/manus-storage/tcg-manager-login-background_ab4c32e6.png";
+export const DEFAULT_LOGIN_BACKGROUND_URL = "/login-bg.png";
+export const LEGACY_DEFAULT_LOGIN_BACKGROUND_URL = "/manus-storage/tcg-manager-login-background_ab4c32e6.png";
 export const LOGIN_BACKGROUND_STORAGE_KEY = "tcg-login-background-url";
 export const LOGIN_BACKGROUND_HISTORY_STORAGE_KEY = "tcg-login-background-history";
 export const LOGIN_BACKGROUND_DAILY_RANDOM_STORAGE_KEY = "tcg-login-background-daily-random";
@@ -9,12 +10,22 @@ type StorageLike = Pick<Storage, "getItem" | "setItem">;
 export type LoginBackgroundHistoryItem = { url: string; savedAt: number };
 
 function isSafeLoginBackgroundUrl(value: unknown): value is string {
-  return typeof value === "string" && value.startsWith("/manus-storage/");
+  return (
+    typeof value === "string" &&
+    (value.startsWith("/manus-storage/") || value === DEFAULT_LOGIN_BACKGROUND_URL)
+  );
+}
+
+function normalizeStoredLoginBackgroundUrl(value: unknown): string {
+  if (value === LEGACY_DEFAULT_LOGIN_BACKGROUND_URL) return DEFAULT_LOGIN_BACKGROUND_URL;
+  return isSafeLoginBackgroundUrl(value) ? value : DEFAULT_LOGIN_BACKGROUND_URL;
 }
 
 export function readLoginBackgroundUrl(storage?: StorageLike) {
   const stored = storage?.getItem(LOGIN_BACKGROUND_STORAGE_KEY);
-  return isSafeLoginBackgroundUrl(stored) ? stored : DEFAULT_LOGIN_BACKGROUND_URL;
+  const normalized = normalizeStoredLoginBackgroundUrl(stored);
+  if (stored !== normalized) storage?.setItem(LOGIN_BACKGROUND_STORAGE_KEY, normalized);
+  return normalized;
 }
 
 export function saveLoginBackgroundUrl(url: string, storage?: StorageLike) {
