@@ -95,7 +95,7 @@ export default function DashboardLayout({
           <div className="flex flex-col items-center gap-4">
             <h1 className="pokemon-logo-text text-4xl">POKÉMON</h1>
             <p className="text-sm text-muted-foreground text-center">
-              Đăng nhập để tiếp tục sử dụng TCG Manager
+              Nhấn để tiếp tục sử dụng TCG Manager
             </p>
           </div>
           <Button
@@ -103,7 +103,7 @@ export default function DashboardLayout({
             size="lg"
             className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 text-black font-bold"
           >
-            Đăng nhập
+            Bắt Đầu
           </Button>
         </div>
       </div>
