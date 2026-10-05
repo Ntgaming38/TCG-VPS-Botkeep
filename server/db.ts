@@ -1438,7 +1438,7 @@ export async function getDashboardStats(userId: number) {
   const inStockPacks = inStockProducts.filter(p => p.type === "pack").reduce((sum, p) => sum + (p.quantity || 0), 0);
   const inStockJunkPacks = inStockProducts.filter(p => p.type === "junk_pack").reduce((sum, p) => sum + (p.quantity || 0), 0);
   const cardRarityStats = summarizeCardRarityQuantities(inStockProducts.filter(p => p.type === "card"));
-  const userChyusenEntries = await db.select().from(chyusenEntries).where(eq(chyusenEntries.userId, userId));
+  const userChyusenEntries = await db.select().from(chyusenEntries).where(and(eq(chyusenEntries.userId, userId), isNull(chyusenEntries.deletedAt)));
   const chyusenWithState = userChyusenEntries.map((entry) => ({
     ...entry,
     timeState: getChyusenTimeState(entry),

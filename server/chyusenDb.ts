@@ -672,5 +672,5 @@ export async function updateChyusenSourceStatus(sourceId: number, update: { late
 export async function listChyusenEntriesByIds(userId: number, entryIds: number[]) {
   const db = await getDb();
   if (!db || entryIds.length === 0) return [];
-  return db.select().from(chyusenEntries).where(and(eq(chyusenEntries.userId, userId), inArray(chyusenEntries.id, entryIds)));
+  return db.select().from(chyusenEntries).where(and(eq(chyusenEntries.userId, userId), inArray(chyusenEntries.id, entryIds), isNull(chyusenEntries.deletedAt)));
 }
