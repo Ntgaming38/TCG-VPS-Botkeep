@@ -60,3 +60,22 @@ Thêm crontab mỗi giờ cho 3 job: chyusen-monitor, marketplace-auto-sync, snk
 - client/src/const.ts: startLogin -> /login
 - client/src/pages/Login.tsx (mới) + App.tsx route /login
 - vite.config.ts: gỡ vite-plugin-manus-runtime
+
+## 6. Đồng bộ DB an toàn khi VPS lỗi migration
+Nếu `pnpm db:push` báo lỗi "duplicate index" / thiếu bảng / thiếu cột:
+**KHÔNG dùng `npx drizzle-kit push`** — nó là interactive và có thể DROP/TRUNCATE dữ liệu.
+
+Dùng script an toàn (chỉ BỔ SUNG, không xóa gì, chạy lại được nhiều lần):
+
+```bash
+node scripts/db-sync.cjs --check    # xem trước, không sửa gì
+node scripts/db-sync.cjs --journal  # đồng bộ journal + tạo bảng/index/enum còn thiếu
+pnpm db:push                        # từ lần sau chạy bình thường (migrations cũ đã được ghi nhận)
+pnpm build && pm2 restart all
+```
+
+Lưu ý:
+- Mật khẩu cũ trong `users.passwordHash` (nếu có) được sao chép sang `auth_credentials` trước khi bỏ qua.
+- Unique constraint chỉ được tạo khi chắc chắn không có dữ liệu trùng lặp; nếu trùng → script báo `[FAIL]` và không đụng gì.
+- Cột/bảng legacy (googleId, passwordHash, marketUrl, ai_chat_messages...) được GIỮ NGUYÊN — không ảnh hưởng app.
+
