@@ -15,11 +15,9 @@ sudo npm i -g pnpm pm2
 git clone <repo-da-boc> tcg && cd tcg
 cp .env.example .env
 # sửa .env: DATABASE_URL, JWT_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD, CRON_SECRET
-# Google OAuth (tùy chọn): GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
+# Google OAuth: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
 # GOOGLE_REDIRECT_URI=https://<domain>/api/auth/google/callback
-# Gmail SMTP (xác nhận email/reset mật khẩu): SMTP_USER, SMTP_PASS (Google App Password)
-# SMTP_HOST=smtp.gmail.com, SMTP_PORT=465, SMTP_SECURE=true; SMTP_FROM mặc định là SMTP_USER
-# EMAIL_CODE_SECRET tùy chọn; mặc định dùng JWT_SECRET
+# (Xác thực mã OTP qua Gmail đã tắt — không cần cấu hình SMTP nữa.)
 pnpm install
 pnpm db:push
 pnpm build
