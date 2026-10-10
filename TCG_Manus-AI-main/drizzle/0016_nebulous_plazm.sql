@@ -1,0 +1,1 @@
+ALTER TABLE `chyusen_sources` ADD `activeBeforeEntryDelete` int;

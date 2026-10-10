@@ -1,0 +1,1 @@
+ALTER TABLE `chyusen_sources` ADD `pausedByEntryDelete` int DEFAULT 0 NOT NULL;

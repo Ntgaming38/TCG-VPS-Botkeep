@@ -1,0 +1,1 @@
+CREATE INDEX `price_history_product_created_idx` ON `price_history` (`productId`,`createdAt`,`id`);

@@ -1,0 +1,125 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1785811742671,
+      "tag": "0000_chunky_george_stacy",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1785812014647,
+      "tag": "0001_fine_shriek",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1785815150919,
+      "tag": "0002_open_revanche",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1786477411928,
+      "tag": "0003_legal_barracuda",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1786589468885,
+      "tag": "0004_hard_aqueduct",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1786589660013,
+      "tag": "0005_tranquil_lightspeed",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1786592281209,
+      "tag": "0006_silent_electro",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1786593220294,
+      "tag": "0007_violet_pepper_potts",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1786593579533,
+      "tag": "0008_closed_speedball",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1786596096437,
+      "tag": "0009_slimy_nocturne",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1786600556069,
+      "tag": "0010_worried_absorbing_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1786602540859,
+      "tag": "0011_absent_whizzer",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1786605304652,
+      "tag": "0012_tranquil_venom",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "5",
+      "when": 1786660017799,
+      "tag": "0013_rapid_songbird",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "5",
+      "when": 1786660696339,
+      "tag": "0014_flat_black_tom",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "5",
+      "when": 1786661252030,
+      "tag": "0015_amusing_martin_li",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "5",
+      "when": 1786661452752,
+      "tag": "0016_nebulous_plazm",
+      "breakpoints": true
+    }
+  ]
+}

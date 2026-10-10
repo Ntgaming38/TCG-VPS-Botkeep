@@ -6,15 +6,61 @@ import { useLocation } from "wouter";
 
 type AuthScreen = "login" | "register" | "forgot";
 
+// "Ghi nhớ đăng nhập 30 ngày": lưu thông tin vào localStorage để form tự điền
+// lại sau khi đăng xuất. TTL khớp REMEMBERED_SESSION_MS của cookie phiên.
+const REMEMBER_LOGIN_KEY = "tcg.remember_login";
+const REMEMBER_LOGIN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
+type RememberedLogin = { email: string; password: string; savedAt: number };
+
+function readRememberedLogin(): RememberedLogin | null {
+  try {
+    const raw = localStorage.getItem(REMEMBER_LOGIN_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<RememberedLogin> | null;
+    if (
+      !parsed ||
+      typeof parsed.email !== "string" ||
+      typeof parsed.password !== "string" ||
+      typeof parsed.savedAt !== "number"
+    ) {
+      localStorage.removeItem(REMEMBER_LOGIN_KEY);
+      return null;
+    }
+    if (Date.now() - parsed.savedAt > REMEMBER_LOGIN_TTL_MS) {
+      localStorage.removeItem(REMEMBER_LOGIN_KEY);
+      return null;
+    }
+    return { email: parsed.email, password: parsed.password, savedAt: parsed.savedAt };
+  } catch {
+    return null;
+  }
+}
+
+function writeRememberedLogin(email: string, password: string) {
+  try {
+    localStorage.setItem(
+      REMEMBER_LOGIN_KEY,
+      JSON.stringify({ email, password, savedAt: Date.now() } satisfies RememberedLogin),
+    );
+  } catch {}
+}
+
+function clearRememberedLogin() {
+  try {
+    localStorage.removeItem(REMEMBER_LOGIN_KEY);
+  } catch {}
+}
+
 export default function Login() {
   const [, setLocation] = useLocation();
   const [screen, setScreen] = useState<AuthScreen>("login");
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState(() => readRememberedLogin()?.email ?? "");
+  const [password, setPassword] = useState(() => readRememberedLogin()?.password ?? "");
   const [otpCode, setOtpCode] = useState("");
   const [otpSent, setOtpSent] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => Boolean(readRememberedLogin()));
   const [error, setError] = useState(() => {
     const reason = new URLSearchParams(window.location.search).get("authError");
     if (reason === "google_not_configured") return "Google chưa được cấu hình trên máy chủ.";
@@ -42,11 +88,15 @@ export default function Login() {
     try {
       if (screen === "login") {
         await post("/api/auth/login", { email, password, rememberMe });
+        if (rememberMe) writeRememberedLogin(email.trim(), password);
+        else clearRememberedLogin();
         setLocation("/thong-ke");
         window.location.href = "/thong-ke";
       } else if (screen === "register") {
         // Đăng ký trực tiếp bằng Gmail + mật khẩu, không cần mã xác nhận.
         await post("/api/auth/register", { name, email, password, rememberMe });
+        if (rememberMe) writeRememberedLogin(email.trim(), password);
+        else clearRememberedLogin();
         setLocation("/thong-ke");
         window.location.href = "/thong-ke";
       } else if (!otpSent) {
