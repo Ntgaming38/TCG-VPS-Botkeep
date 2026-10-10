@@ -18,9 +18,9 @@ import { validatePublicChyusenUrl } from "./chyusenUtils";
 import { formatChyusenDayMonth, isChyusenResultReady } from "@shared/chyusenDate";
 import { checkChyusenSourceNow } from "./chyusenMonitor";
 import { analyzeChyusenImage, analyzeChyusenImages } from "./chyusenImageAnalysis";
-import { emptyTrashItems, getTrashAutoCleanupSettings, listTrashItems, saveTrashAutoCleanupSettings, setTrashAutoCleanupTask, TRASH_AUTO_CLEANUP_CRON } from "./trashDb";
+import { emptyTrashItems, getTrashAutoCleanupSettings, listTrashItems, listTrashItemsForBackup, saveTrashAutoCleanupSettings, setTrashAutoCleanupTask, TRASH_AUTO_CLEANUP_CRON } from "./trashDb";
 import { restoreTrashItem } from "./trashRestore";
-import { createHeartbeatJob, listHeartbeatJobs, updateHeartbeatJob } from "./_core/heartbeat";
+import { createHeartbeatJob, updateHeartbeatJob } from "./_core/heartbeat";
 import { uploadLoginBackground } from "./loginBackground";
 import { normalizeCardRank } from "@shared/cardRank";
 import { uploadUserAvatar } from "./userProfile";
@@ -28,9 +28,8 @@ import { createDataBackupPayload, DATA_BACKUP_SCOPES } from "@shared/dataBackupE
 import { dataBackupRestoreSchema } from "@shared/dataBackupRestore";
 import { restoreDataBackup } from "./dataRestore";
 import { createMonthlyReport } from "@shared/monthlyReport";
-import { createManualStoredBackup, getAutoBackupSettings, listBackupArchives, listBackupRestoreHistory, AUTO_BACKUP_CRON, saveAutoBackupSettings, setAutoBackupTask, type AutoBackupFrequency } from "./backupScheduler";
+import { createManualStoredBackup, getAutoBackupSettings, listBackupArchives, listBackupRestoreHistory, AUTO_BACKUP_CRON, saveAutoBackupSettings, type AutoBackupFrequency } from "./backupScheduler";
 import { getReportBranding, saveReportBranding, uploadReportLogo } from "./reportBranding";
-import { findExistingAutoBackupTask } from "@shared/autoBackupSchedule";
 import * as snkrShopDb from "./snkrShopDb";
 
 const chyusenEntryBase = z.object({
@@ -144,7 +143,7 @@ export const appRouter = router({
     exportData: protectedProcedure
       .input(z.object({ scope: z.enum(DATA_BACKUP_SCOPES) }))
       .mutation(async ({ ctx, input }) => {
-        const [inventory, purchaseRows, saleRows, chyusenEntries, chyusenSources, chyusenNotifications, chyusenSettings] = await Promise.all([
+        const [inventory, purchaseRows, saleRows, chyusenEntries, chyusenSources, chyusenNotifications, chyusenSettings, shopRows, saleLocationRows, snkrShopItems, trashRows, branding, user, activityRows] = await Promise.all([
           db.listProducts(ctx.user.id, { status: "all" }),
           db.listPurchases(ctx.user.id),
           db.listSales(ctx.user.id),
@@ -152,6 +151,13 @@ export const appRouter = router({
           chyusenDb.listChyusenSources(ctx.user.id),
           chyusenDb.listChyusenNotifications(ctx.user.id),
           chyusenDb.getChyusenNotificationSettings(ctx.user.id),
+          db.listShops(ctx.user.id),
+          db.listSaleLocations(ctx.user.id),
+          snkrShopDb.listSnkrShopItems(ctx.user.id),
+          listTrashItemsForBackup(ctx.user.id),
+          getReportBranding(ctx.user.id),
+          db.getUserById(ctx.user.id),
+          db.listAllActivityLogsForBackup(ctx.user.id),
         ]);
 
         return createDataBackupPayload(input.scope, {
@@ -164,6 +170,13 @@ export const appRouter = router({
             notifications: chyusenNotifications,
             notificationSettings: chyusenSettings,
           },
+          shops: shopRows,
+          saleLocations: saleLocationRows,
+          snkrShop: { items: snkrShopItems },
+          trash: trashRows,
+          reportBranding: branding ? { accentColor: branding.accentColor, logoUrl: branding.logoUrl } : null,
+          userProfile: user ? { nickname: user.nickname ?? null, avatarUrl: user.avatarUrl ?? null, avatarBorderColor: user.avatarBorderColor ?? null, language: user.language ?? null, currency: user.currency ?? null } : null,
+          activityLogs: activityRows,
         });
       }),
     restorePreview: protectedProcedure
@@ -175,10 +188,15 @@ export const appRouter = router({
         purchaseCount: input.backup.purchases?.length || 0,
         saleCount: input.backup.sales?.length || 0,
         chyusenCount: input.backup.chyusen?.entries?.length || 0,
+        shopCount: input.backup.shops?.length || 0,
+        saleLocationCount: input.backup.saleLocations?.length || 0,
+        snkrShopCount: input.backup.snkrShop?.items?.length || 0,
+        trashCount: input.backup.trash?.length || 0,
+        activityLogCount: input.backup.activityLogs?.length || 0,
       })),
     restoreData: protectedProcedure
-      .input(z.object({ backup: dataBackupRestoreSchema, sourceFileName: z.string().trim().max(255).optional(), confirmed: z.literal(true) }))
-      .mutation(async ({ ctx, input }) => restoreDataBackup(ctx.user.id, input.backup, input.sourceFileName)),
+      .input(z.object({ backup: dataBackupRestoreSchema, sourceFileName: z.string().trim().max(255).optional(), mode: z.enum(["merge", "overwrite"]).default("merge"), confirmed: z.literal(true) }))
+      .mutation(async ({ ctx, input }) => restoreDataBackup(ctx.user.id, input.backup, input.sourceFileName, input.mode)),
     restoreHistory: protectedProcedure.query(({ ctx }) => listBackupRestoreHistory(ctx.user.id)),
     archives: protectedProcedure.query(({ ctx }) => listBackupArchives(ctx.user.id)),
     createStoredSnapshot: protectedProcedure.mutation(({ ctx }) => createManualStoredBackup(ctx.user.id)),
@@ -189,30 +207,10 @@ export const appRouter = router({
     updateAutoBackup: protectedProcedure
       .input(z.object({ isEnabled: z.boolean().optional(), frequency: z.enum(["weekly", "monthly"]).optional() }))
       .mutation(async ({ ctx, input }) => {
-        const current = await getAutoBackupSettings(ctx.user.id);
-        const shouldEnable = input.isEnabled ?? Boolean(current?.isEnabled);
-        const updated = await saveAutoBackupSettings(ctx.user.id, { frequency: input.frequency as AutoBackupFrequency | undefined, isEnabled: false });
+        // Tự lưu cấu hình; việc chạy do cron của VPS gọi /api/scheduled/auto-backup với x-cron-secret.
+        const updated = await saveAutoBackupSettings(ctx.user.id, { frequency: input.frequency as AutoBackupFrequency | undefined, isEnabled: input.isEnabled });
         if (!updated) throw new Error("Không thể lưu cấu hình sao lưu tự động.");
-        const sessionToken = parseCookieHeader(ctx.req.headers.cookie ?? "")[COOKIE_NAME];
-        if (shouldEnable) {
-          if (!sessionToken) throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để bật sao lưu tự động.");
-          if (updated.scheduleCronTaskUid) await updateHeartbeatJob(updated.scheduleCronTaskUid, { cron: updated.cronExpression, path: "/api/scheduled/auto-backup", enable: true }, sessionToken);
-          else {
-            const existingJobs = await listHeartbeatJobs(sessionToken);
-            const existingTaskUid = findExistingAutoBackupTask(existingJobs.jobs, ctx.user.id);
-            if (existingTaskUid) {
-              await setAutoBackupTask(ctx.user.id, existingTaskUid);
-              await updateHeartbeatJob(existingTaskUid, { cron: updated.cronExpression, path: "/api/scheduled/auto-backup", enable: true }, sessionToken);
-            } else {
-            const job = await createHeartbeatJob({ name: `auto-backup-${ctx.user.id}`, cron: updated.cronExpression, path: "/api/scheduled/auto-backup", description: `Sao lưu dữ liệu ${updated.frequency === "weekly" ? "hàng tuần" : "hàng tháng"} cho tài khoản ${ctx.user.id}` }, sessionToken);
-            await setAutoBackupTask(ctx.user.id, job.taskUid);
-            }
-          }
-          await saveAutoBackupSettings(ctx.user.id, { frequency: updated.frequency, isEnabled: true });
-        } else if (updated.scheduleCronTaskUid && sessionToken) {
-          await updateHeartbeatJob(updated.scheduleCronTaskUid, { enable: false }, sessionToken);
-        }
-        return (await getAutoBackupSettings(ctx.user.id)) ?? updated;
+        return updated;
       }),
   }),
 

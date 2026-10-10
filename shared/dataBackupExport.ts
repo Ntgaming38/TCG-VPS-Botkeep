@@ -10,6 +10,13 @@ export type DataBackupPayload = {
   purchases?: unknown[];
   sales?: unknown[];
   chyusen?: Record<string, unknown>;
+  shops?: unknown[];
+  saleLocations?: unknown[];
+  snkrShop?: Record<string, unknown>;
+  trash?: unknown[];
+  reportBranding?: Record<string, unknown> | null;
+  userProfile?: Record<string, unknown> | null;
+  activityLogs?: unknown[];
 };
 
 export function createDataBackupPayload(
@@ -22,6 +29,16 @@ export function createDataBackupPayload(
   if (scope === "purchases" || scope === "all") payload.purchases = datasets.purchases ?? [];
   if (scope === "sales" || scope === "all") payload.sales = datasets.sales ?? [];
   if (scope === "chyusen" || scope === "all") payload.chyusen = datasets.chyusen ?? {};
+  if (scope === "all") {
+    // Scope "all" bao trùm toàn bộ dữ liệu người dùng để khôi phục đầy đủ trên máy mới.
+    payload.shops = datasets.shops ?? [];
+    payload.saleLocations = datasets.saleLocations ?? [];
+    payload.snkrShop = datasets.snkrShop ?? { items: [] };
+    payload.trash = datasets.trash ?? [];
+    payload.reportBranding = datasets.reportBranding ?? null;
+    payload.userProfile = datasets.userProfile ?? null;
+    payload.activityLogs = datasets.activityLogs ?? [];
+  }
   return payload;
 }
 

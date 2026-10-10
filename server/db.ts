@@ -855,6 +855,16 @@ export async function listSensitiveActivityLogs(userId: number, limit = 20) {
     .limit(pageSize);
 }
 
+/** Trả về toàn bộ nhật ký hoạt động của người dùng, dùng cho sao lưu khôi phục. */
+export async function listAllActivityLogsForBackup(userId: number, limit = 1000) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(activityLogs)
+    .where(eq(activityLogs.userId, userId))
+    .orderBy(desc(activityLogs.createdAt), desc(activityLogs.id))
+    .limit(limit);
+}
+
 // ========== PURCHASES ==========
 
 export async function listPurchases(userId: number, opts?: { search?: string }) {

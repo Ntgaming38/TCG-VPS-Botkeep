@@ -49,6 +49,17 @@ Mở https://<domain>/login -> nhập ADMIN_EMAIL/ADMIN_PASSWORD
 curl -X POST https://<domain>/api/scheduled/marketplace-auto-sync -H "x-cron-secret: $CRON_SECRET"
 Thêm crontab mỗi giờ cho 3 job: chyusen-monitor, marketplace-auto-sync, snkr-shop-auto-sync.
 
+### Cron sao lưu tự động (auto-backup)
+Khi người dùng bật "Sao lưu tự động" trong Cài đặt, server chỉ lưu cấu hình (frequency, isEnabled).
+Cron trên VPS gọi định kỳ để tạo bản sao JSON cho mọi tài khoản đã bật:
+
+```bash
+# Chạy mỗi 30 phút; server tự quyết định tới hạn theo weekly/monthly của từng tài khoản
+*/30 * * * * curl -s -X POST https://<domain>/api/scheduled/auto-backup -H "x-cron-secret: $CRON_SECRET" >> /var/log/tcg-auto-backup.log 2>&1
+```
+
+Bản sao lưu được lưu vào `dist/public/uploads/data-backups/<userId>/` và hiển thị trong Cài đặt → "Bản sao đã lưu".
+
 ## File đã sửa cho self-host
 - server/_core/env.ts: thêm ADMIN_*, CRON_SECRET, STORAGE_DIR
 - server/_core/localAuth.ts (mới): POST /api/auth/login

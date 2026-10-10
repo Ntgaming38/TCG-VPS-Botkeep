@@ -189,7 +189,8 @@ async function startServer() {
     })
   );
   // development mode uses Vite, production mode uses static files
-  if (process.env.NODE_ENV === "development") {
+  const isBundled = import.meta.url.includes("/dist/") || Boolean(process.argv[1]?.replace(/\\/g, "/").includes("/dist/"));
+  if (process.env.NODE_ENV === "development" && !isBundled) {
     await setupVite(app, server);
   } else {
     serveStatic(app);

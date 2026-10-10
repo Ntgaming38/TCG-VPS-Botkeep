@@ -15,6 +15,15 @@ export const dataBackupRestoreSchema = z.object({
     notifications: recordArray.optional(),
     notificationSettings: z.record(z.string(), z.unknown()).optional(),
   }).optional(),
+  shops: recordArray.optional(),
+  saleLocations: recordArray.optional(),
+  snkrShop: z.object({
+    items: recordArray.optional(),
+  }).optional(),
+  trash: recordArray.optional(),
+  reportBranding: z.record(z.string(), z.unknown()).optional(),
+  userProfile: z.record(z.string(), z.unknown()).optional(),
+  activityLogs: recordArray.optional(),
 });
 
 export type DataBackupRestorePayload = z.infer<typeof dataBackupRestoreSchema>;
@@ -27,5 +36,9 @@ export function getDataBackupRestorePreview(payload: DataBackupRestorePayload) {
     purchaseCount: payload.purchases?.length || 0,
     saleCount: payload.sales?.length || 0,
     chyusenCount: payload.chyusen?.entries?.length || 0,
+    shopCount: payload.shops?.length || 0,
+    saleLocationCount: payload.saleLocations?.length || 0,
+    snkrShopCount: payload.snkrShop?.items?.length || 0,
+    trashCount: payload.trash?.length || 0,
   };
 }

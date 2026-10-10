@@ -36,6 +36,22 @@ export async function listTrashItems(userId: number) {
     .orderBy(desc(trashItems.deletedAt));
 }
 
+/** Liệt kê Thùng rác kèm snapshot đầy đủ, dùng cho sao lưu khôi phục. */
+export async function listTrashItemsForBackup(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    id: trashItems.id,
+    entityType: trashItems.entityType,
+    entityId: trashItems.entityId,
+    title: trashItems.title,
+    snapshot: trashItems.snapshot,
+    deletedAt: trashItems.deletedAt,
+  }).from(trashItems)
+    .where(and(eq(trashItems.userId, userId), isNull(trashItems.restoredAt)))
+    .orderBy(desc(trashItems.deletedAt));
+}
+
 export async function getTrashItem(userId: number, trashId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");

@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { autoBackupSettings, backupArchives, backupRestoreHistory } from "../drizzle/schema";
 import { getDb } from "./db";
 import { createFullUserBackup } from "./backupData";
@@ -69,22 +69,52 @@ async function saveSnapshot(userId: number, source: "scheduled" | "manual" = "sc
   return { fileName, fileUrl: stored.url, fileSize: Buffer.byteLength(content, "utf8") };
 }
 
-export async function runScheduledAutoBackup(taskUid: string) {
-  const settings = await getAutoBackupSettingsByTask(taskUid);
-  if (!settings) return { status: "skipped" as const, summary: "Không tìm thấy cấu hình sao lưu." };
-  if (!settings.isEnabled) return { status: "skipped" as const, summary: "Sao lưu tự động đang tắt." };
-  const database = await getDb();
-  if (!database) throw new Error("Database not available");
+async function runBackupForUser(settings: { id: number; userId: number }, database: NonNullable<Awaited<ReturnType<typeof getDb>>>) {
   try {
     const snapshot = await saveSnapshot(settings.userId, "scheduled");
     const summary = `Đã tạo ${snapshot.fileName} (${Math.ceil(snapshot.fileSize / 1024)} KB).`;
-    await database.update(autoBackupSettings).set({ lastRunAt: new Date(), lastRunStatus: "success", lastRunSummary: summary }).where(and(eq(autoBackupSettings.id, settings.id), eq(autoBackupSettings.scheduleCronTaskUid, taskUid)));
+    await database.update(autoBackupSettings).set({ lastRunAt: new Date(), lastRunStatus: "success", lastRunSummary: summary }).where(eq(autoBackupSettings.id, settings.id));
     return { status: "success" as const, summary };
   } catch (error) {
     const summary = error instanceof Error ? error.message.slice(0, 1000) : String(error).slice(0, 1000);
-    await database.update(autoBackupSettings).set({ lastRunAt: new Date(), lastRunStatus: "failed", lastRunSummary: summary }).where(and(eq(autoBackupSettings.id, settings.id), eq(autoBackupSettings.scheduleCronTaskUid, taskUid)));
+    await database.update(autoBackupSettings).set({ lastRunAt: new Date(), lastRunStatus: "failed", lastRunSummary: summary }).where(eq(autoBackupSettings.id, settings.id));
     throw error;
   }
+}
+
+export async function runScheduledAutoBackup(taskUid: string) {
+  const database = await getDb();
+  if (!database) throw new Error("Database not available");
+
+  // Cron của VPS ("selfhost-cron") chạy cho mọi tài khoản đã bật sao lưu tự động.
+  if (taskUid === "selfhost-cron") {
+    const enabled = await database.select().from(autoBackupSettings).where(eq(autoBackupSettings.isEnabled, 1));
+    if (!enabled.length) return { status: "skipped" as const, summary: "Chưa có tài khoản nào bật sao lưu tự động." };
+    const now = Date.now();
+    const dueSettings = enabled.filter((settings) => {
+      if (!settings.lastRunAt) return true;
+      // Weekly: sau 7 ngày; monthly: sau 28 ngày (an toàn cho cả tháng 28/29/30/31 ngày).
+      const intervalMs = (settings.frequency === "monthly" ? 28 : 7) * 24 * 60 * 60 * 1000;
+      return now - new Date(settings.lastRunAt).getTime() >= intervalMs;
+    });
+    if (!dueSettings.length) return { status: "skipped" as const, summary: "Chưa tới hạn sao lưu cho tài khoản nào." };
+    let successCount = 0;
+    let failedCount = 0;
+    for (const settings of dueSettings) {
+      try {
+        await runBackupForUser(settings, database);
+        successCount += 1;
+      } catch {
+        failedCount += 1;
+      }
+    }
+    return { status: failedCount ? ("partial" as const) : ("success" as const), summary: `Sao lưu tự động: ${successCount} thành công, ${failedCount} thất bại.` };
+  }
+
+  const settings = await getAutoBackupSettingsByTask(taskUid);
+  if (!settings) return { status: "skipped" as const, summary: "Không tìm thấy cấu hình sao lưu." };
+  if (!settings.isEnabled) return { status: "skipped" as const, summary: "Sao lưu tự động đang tắt." };
+  return runBackupForUser(settings, database);
 }
 
 export async function createManualStoredBackup(userId: number) {
