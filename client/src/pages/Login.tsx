@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { useLocation } from "wouter";
 
-type AuthScreen = "login" | "register";
+type AuthScreen = "login" | "register" | "forgot";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -12,6 +12,8 @@ export default function Login() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState(() => {
     const reason = new URLSearchParams(window.location.search).get("authError");
@@ -42,11 +44,22 @@ export default function Login() {
         await post("/api/auth/login", { email, password, rememberMe });
         setLocation("/thong-ke");
         window.location.href = "/thong-ke";
-      } else {
+      } else if (screen === "register") {
         // Đăng ký trực tiếp bằng Gmail + mật khẩu, không cần mã xác nhận.
         await post("/api/auth/register", { name, email, password, rememberMe });
         setLocation("/thong-ke");
         window.location.href = "/thong-ke";
+      } else if (!otpSent) {
+        await post("/api/auth/password/forgot", { email });
+        setOtpSent(true);
+        setNotice("Đã gửi mã xác nhận 6 số qua Gmail. Mã có hiệu lực 10 phút.");
+      } else {
+        await post("/api/auth/password/reset", { email, code: otpCode, password });
+        setNotice("Đã đặt lại mật khẩu. Hãy đăng nhập bằng mật khẩu mới.");
+        setOtpCode("");
+        setOtpSent(false);
+        setPassword("");
+        setScreen("login");
       }
     } catch (err: any) {
       setError(err.message);
@@ -59,6 +72,7 @@ export default function Login() {
   const title = {
     login: "Đăng nhập",
     register: "Tạo tài khoản",
+    forgot: "Quên mật khẩu",
   }[screen];
 
   return (
@@ -94,10 +108,23 @@ export default function Login() {
             <Label htmlFor="email">Email</Label>
             <Input id="email" name="username" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username email" required />
           </div>}
+          {screen === "forgot" && <div className="space-y-2">
+            <Label htmlFor="forgot-email">Email đăng ký</Label>
+            <Input id="forgot-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username email" required />
+          </div>}
+          {otpSent && screen === "forgot" && <div className="space-y-2">
+            <Label htmlFor="otp-code">Mã xác nhận (6 số trong Gmail)</Label>
+            <Input id="otp-code" inputMode="numeric" value={otpCode} onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))} maxLength={6} required />
+          </div>}
           {(screen === "login" || screen === "register") && <div className="space-y-2">
             <Label htmlFor="password">Mật khẩu</Label>
             <Input id="password" name="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={screen === "login" ? "current-password" : "new-password"} minLength={screen === "register" ? 8 : undefined} maxLength={128} required />
             {screen === "register" && <p className="text-xs text-slate-400">Mật khẩu cần ít nhất 8 ký tự.</p>}
+          </div>}
+          {screen === "forgot" && otpSent && <div className="space-y-2">
+            <Label htmlFor="new-password">Mật khẩu mới</Label>
+            <Input id="new-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" minLength={8} maxLength={128} required />
+            <p className="text-xs text-slate-400">Mật khẩu cần ít nhất 8 ký tự.</p>
           </div>}
           {isEmailStep && <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-300">
             <input type="checkbox" checked={rememberMe} onChange={(event) => setRememberMe(event.target.checked)} className="h-4 w-4 accent-primary" />
@@ -106,10 +133,12 @@ export default function Login() {
           {notice && <p role="status" className="text-sm text-emerald-400">{notice}</p>}
           {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
           <Button type="submit" disabled={loading} className="w-full">
-            {loading ? "Đang xử lý..." : screen === "login" ? "Đăng nhập vào Kho" : "Tạo tài khoản và đăng nhập"}
+            {loading ? "Đang xử lý..." : screen === "login" ? "Đăng nhập vào Kho" : screen === "register" ? "Tạo tài khoản và đăng nhập" : otpSent ? "Đặt lại mật khẩu" : "Gửi mã xác nhận"}
           </Button>
         </form>
-        {screen === "login" && <p className="text-xs text-slate-500">Quên mật khẩu? Hãy đăng nhập rồi đổi trong Cài đặt tài khoản. Tài khoản quản trị dùng ADMIN_PASSWORD trong cấu hình máy chủ.</p>}
+        {screen === "login" && <button type="button" onClick={() => { setScreen("forgot"); setError(""); setNotice(""); setOtpSent(false); }} className="w-full text-center text-xs text-sky-400 hover:underline">Quên mật khẩu?</button>}
+        {screen === "forgot" && <button type="button" onClick={() => { setScreen("login"); setError(""); setNotice(""); setOtpSent(false); }} className="w-full text-center text-xs text-slate-400 hover:underline">Quay lại đăng nhập</button>}
+        {screen === "login" && <p className="text-xs text-slate-500">Tài khoản quản trị dùng ADMIN_PASSWORD trong cấu hình máy chủ.</p>}
       </div>
     </div>
   );
