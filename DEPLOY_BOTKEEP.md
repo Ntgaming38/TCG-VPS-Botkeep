@@ -129,7 +129,8 @@ GOOGLE_REDIRECT_URI=https://<domain-botkeep>/api/auth/google/callback
 ## 4. Kiểm tra sau khi deploy
 - Panel Botkeep → tab **Console**: phải thấy `Server running on http://localhost:3000/`.
 - Mở domain Botkeep → phải thấy trang login, title "Pokémon Trading Manager".
-- Đăng nhập bằng `ADMIN_EMAIL` / `ADMIN_PASSWORD` → vào `/kho-hang`.
+- Đăng nhập bằng `ADMIN_EMAIL` / `ADMIN_PASSWORD` → app tự chuyển sang `/thong-ke`
+  (trang Thống kê). Từ menu trái vào `/kho-hang` (Kho Hàng) và các mục khác.
 - Nếu crash do thiếu RAM: tăng phân bổ RAM cho workload trong panel (bộ nhớ dùng chung).
 
 ---
