@@ -1,12 +1,23 @@
-// Sinh icon PWA cho TCG Manager tu client/public/logo.svg bang sharp.
+// Sinh icon PWA cho TCG Manager.
+// Nguon uu tien: client/public/app-logo.png (neu co), nguoc lai dung logo.svg.
 // Chay: node scripts/generate-app-icons.mjs
-// Muon doi logo: thay file client/public/logo.svg roi chay lai script nay.
+// Muon doi logo: thay file app-logo.png (hoac logo.svg) roi chay lai script nay.
 import sharp from "sharp";
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const dir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "client", "public");
-const svg = path.join(dir, "logo.svg");
+// Uu tien anh logo tuy chinh; fallback ve logo.svg neu chua co.
+const candidates = ["app-logo.png", "app-logo.jpg", "app-logo.jpeg", "app-logo.webp", "logo.svg"];
+const found = candidates.find((name) => fs.existsSync(path.join(dir, name)));
+if (!found) {
+  console.error("Khong tim thay app-logo.(png|jpg|jpeg|webp) trong client/public");
+  process.exit(1);
+}
+const source = path.join(dir, found);
+const isSvg = found.endsWith(".svg");
+console.log(`Nguon icon: ${found}`);
 
 const targets = [
   { file: "icon-192.png", size: 192 },
@@ -16,10 +27,12 @@ const targets = [
 ];
 
 for (const t of targets) {
-  await sharp(svg, { density: 384 })
-    .resize(t.size, t.size, { fit: "contain", background: { r: 11, g: 18, b: 32, alpha: 1 } })
-    .flatten({ background: "#0b1220" })
+  const pipeline = sharp(source, isSvg ? { density: 384 } : {});
+  await pipeline
+    // Anh nguon la icon vuong -> cover de fill dung khung, giu nguyen noi dung.
+    .resize(t.size, t.size, { fit: "cover" })
     .png()
     .toFile(path.join(dir, t.file));
   console.log(`generated ${t.file} (${t.size}x${t.size})`);
 }
+
