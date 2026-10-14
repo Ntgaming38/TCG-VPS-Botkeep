@@ -710,6 +710,8 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .query(({ ctx, input }) => chyusenDb.getChyusenEntry(ctx.user.id, input.id)),
 
+    resultHistory: protectedProcedure.query(({ ctx }) => chyusenDb.listChyusenResultHistory(ctx.user.id)),
+
     previewUrl: protectedProcedure
       .input(z.object({ sourceUrl: z.string().trim().url().max(2048) }))
       .mutation(({ input }) => parseChyusenUrl(validateChyusenSourceUrl(input.sourceUrl), true)),

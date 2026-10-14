@@ -23,7 +23,7 @@ import { startLogin } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
 import {
   BarChart3, LogOut, PanelLeft, CreditCard, Box, Gift, Package, RefreshCw, UserRoundCog, Store,
-  Warehouse, ShoppingCart, DollarSign, TrendingUp, FileText, LayoutDashboard, Ticket, Settings, History, Trash2
+  Warehouse, ShoppingCart, DollarSign, TrendingUp, FileText, LayoutDashboard, Ticket, Settings, History, Trash2, ListChecks
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -50,6 +50,7 @@ const menuItems = [
   { icon: TrendingUp, label: "Marketplace", path: "/marketplace" },
   { icon: Store, label: "Shop SNKR", path: "/shop-snkr" },
   { icon: Ticket, label: "抽選 / Chūsen", path: "/chyusen" },
+  { icon: ListChecks, label: "Lịch sử Chūsen", path: "/lich-su-chyusen" },
   { icon: History, label: "Lịch Sử", path: "/lich-su" },
   { icon: FileText, label: "Báo Cáo", path: "/bao-cao" },
   { icon: Settings, label: "Cài đặt", path: "/cai-dat" },

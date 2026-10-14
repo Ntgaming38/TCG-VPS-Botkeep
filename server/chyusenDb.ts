@@ -274,6 +274,29 @@ export async function getChyusenEntry(userId: number, entryId: number) {
   };
 }
 
+/**
+ * Truy vấn nguồn cho trang Lịch sử kết quả Chūsen.
+ *
+ * Khác với danh sách quản lý, hàm này KHÔNG loại lượt đã xóa mềm, vì lượt
+ * Trượt luôn được đưa vào Thùng rác và lượt trúng đã chuyển sang Mua Hàng
+ * cũng được xóa mềm. Mỗi dòng `chyusen_entries` chỉ trả về một lần, trang
+ * hiển thị sẽ dùng `getChyusenResultOutcome` để suy ra Đã trúng / Trượt / Hủy
+ * theo cùng một quy tắc, nên lượt chưa có kết quả tự bị loại.
+ */
+export async function listChyusenResultHistory(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select().from(chyusenEntries)
+    .where(eq(chyusenEntries.userId, userId))
+    .orderBy(desc(chyusenEntries.updatedAt), desc(chyusenEntries.id));
+  return rows.map((entry) => ({
+    ...entry,
+    timeState: getChyusenTimeState(entry),
+    urgency: getChyusenUrgency(entry.applicationEnd),
+    fieldConfidence: entry.fieldConfidence ? JSON.parse(entry.fieldConfidence) : {},
+  }));
+}
+
 export async function upsertChyusenSource(userId: number, sourceUrl: string, values: {
   entryId?: number;
   label?: string;

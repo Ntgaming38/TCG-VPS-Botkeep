@@ -16,6 +16,7 @@ import SnkrShop from "./pages/SnkrShop";
 import SnkrShopDetail from "./pages/SnkrShopDetail";
 import Reports from "./pages/Reports";
 import Chyusen from "./pages/Chyusen";
+import ChyusenHistory from "./pages/ChyusenHistory";
 import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
 import ActivityHistory from "./pages/ActivityHistory";
@@ -69,6 +70,10 @@ function Router() {
       <Route path={"/chyusen"}>
         <ProtectedRoute component={Chyusen} />
       </Route>
+      <Route path="/lich-su-chyusen">
+        <ProtectedRoute component={ChyusenHistory} />
+      </Route>
+
       <Route path={"/thong-bao"}>
         <ProtectedRoute component={Notifications} />
       </Route>
