@@ -57,6 +57,19 @@ const menuItems = [
   { icon: Trash2, label: "Thùng rác", path: "/thung-rac" },
 ];
 
+/**
+ * Xác định menu đang active cho một route.
+ *
+ * Khớp chính xác route, HOẶC route con (path + "/"). Việc bắt buộc có dấu "/"
+ * phân cách giúp không nhầm hai menu có tiền tố giống nhau, ví dụ:
+ * - "/lich-su-chyusen" KHÔNG làm menu "/lich-su" active (vì "/lich-su-"
+ *   không bắt đầu bằng "/lich-su/").
+ * - "/shop-snkr/123" vẫn làm menu "/shop-snkr" active (trang con hợp lệ).
+ */
+function isMenuItemActive(location: string, path: string) {
+  return location === path || location.startsWith(`${path}/`);
+}
+
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
 const DEFAULT_WIDTH = 260;
 const MIN_WIDTH = 200;
@@ -140,7 +153,7 @@ function DashboardLayoutContent({
   const sidebarRef = useRef<HTMLDivElement>(null);
   const pullStartRef = useRef<{ x: number; y: number } | null>(null);
   const knownUnreadChyusenIdsRef = useRef<Set<number> | null>(null);
-  const activeMenuItem = menuItems.find(item => location.startsWith(item.path));
+  const activeMenuItem = menuItems.find(item => isMenuItemActive(location, item.path));
   const isMobile = useIsMobile();
   const { data: chyusenNotifications = [] } = trpc.chyusen.notifications.useQuery(undefined, { staleTime: 60_000, refetchInterval: 60_000 });
   const { data: chyusenNotificationSettings } = trpc.chyusen.notificationSettings.useQuery(undefined, { staleTime: 60_000 });
@@ -274,7 +287,7 @@ function DashboardLayoutContent({
           <SidebarContent className="gap-0">
             <SidebarMenu className="px-2 py-1">
               {menuItems.map(item => {
-                const isActive = location.startsWith(item.path);
+                const isActive = isMenuItemActive(location, item.path);
                 return (
                   <SidebarMenuItem key={item.path}>
                     <SidebarMenuButton
