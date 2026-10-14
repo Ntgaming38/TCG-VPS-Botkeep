@@ -1267,7 +1267,49 @@
 - [x] Lưu checkpoint phiên bản mới nhất
 
 ## Tiến trình xử lý ảnh AI
+
+---
+
+## Đối chiếu code ↔ todo — 10/10/2026 (bản D: Botkeep, app đang live)
+
+> `todo.md`: 996 mục [x], 0 mục [ ] còn lại. `todo-jmrcx3bs.md`: 100 mục [x], 0 mục [ ] còn lại.
+> Cả 2 file dừng cập nhật từ 21/09/2026, trong khi code có thêm nhiều commit sau đó nên những
+> thay đổi dưới đây CHƯA TỪNG được ghi vào todo. Ghi chú này liệt kê (B) mục todo đã bị code
+> BỎ/ĐỔI và (C) tính năng mới trong code.
+
+### A. Đã khớp — todo ghi đúng, code vẫn còn (không cần sửa)
+- [x] Thiết bị/phiên đăng nhập: todo có 2 mục "Thiết bị và phiên đăng nhập" + "Nhận diện thiết bị đăng nhập" → khớp `shared/sessionDevice.ts` và `server/sessionDevice.test.ts`.
+- [x] Nhật ký hoạt động / Thùng rác / Sao lưu-Xuất-Khôi phục / Dọn nhật ký: các file `activityLogCleanup.ts`, `trashAutoCleanup.ts`, `backupScheduler.ts`, `backupData.ts`, `dataBackupExport/Restore.ts` đều tồn tại.
+- [x] Shop SNKR / Marketplace / Chyusen: module và test tương ứng vẫn tồn tại trong code.
+
+### B. Todo ghi CŨ — code đã BỎ hoặc ĐỔI (cần cập nhật lại các dòng cũ)
+- [x] "Login/Register flow with Manus OAuth" (todo dòng ~11): Manus OAuth đã bị BÓC HOÀN TOÀN cho self-host (`DEPLOY_ORACLE_VPS.md`). Hiện login bằng email+mật khẩu local (`server/_core/localAuth.ts`) + Google (`server/_core/googleAuth.ts`). → Dòng todo này đã LỖI THỜI.
+- [x] "Image upload for products (S3 upload via /api/upload-image)" (todo dòng ~29): S3/Forge đã bị BÓC cho self-host; upload hiện lưu đĩa local `STORAGE_DIR` (`server/storage.ts`), chỉ giữ Forge proxy cho dữ liệu Manus cũ. → Dòng todo này đã ĐỔI.
+- [x] `server/_core/emailCodes.ts` + `server/_core/emailSender.ts` + `server/_core/emailCodes.test.ts`: đã BỊ XÓA (commit `ff7e42d` hiện D), thay bằng `server/_core/emailOtp.ts` + `server/emailOtp.test.ts`. Không còn file cũ.
+- [x] `vite-plugin-manus-runtime`: đã GỠ khỏi `vite.config.ts` (plugins hiện chỉ `react()`, `tailwindcss()`, debug collector). Gói vẫn còn trong `devDependencies` nhưng KHÔNG dùng (dead weight).
+- [x] `@builder.io/vite-plugin-jsx-loc` (`jsxLocPlugin`): chỉ còn trong bản cũ `TCG_Manus-AI-main/vite.config.ts`; `vite.config.ts` hiện tại KHÔNG dùng. Đã xóa khỏi `package.json` bản Botkeep vì gây lỗi `ERESOLVE` với vite@7 khi `npm install` (commit `334bec9`).
+- [x] `packageManager: pnpm@...`: đã XÓA khỏi `package.json` bản Botkeep để npm/corepack không tự gọi pnpm trên PaaS (commit `334bec9`).
+
 - [x] Rà soát luồng xử lý ảnh AI và trạng thái loading hiện có
+
+### C. Tính năng MỚI trong code — chưa từng có trong todo (ghi bổ sung)
+- [x] Google login: nút "Tiếp tục với Google" (`/api/auth/google`), callback verify JWT qua JWKS (`server/_core/googleAuth.ts`), bản ghi credential `auth_credentials` (migration 0041). Redirect URI cấu hình theo domain.
+- [x] Đăng ký/trực tiếp bằng email+mật khẩu: không còn mã xác thực qua Gmail, mỗi tài khoản dùng dữ liệu riêng (`client/src/pages/Login.tsx`, `server/_core/emailAuthRoutes.ts`).
+- [x] Quên mật khẩu OTP qua Gmail: gửi mã 6 số, đặt lại mật khẩu + thu hồi session (`server/_core/emailOtp.ts`, `server/emailOtp.test.ts`, bảng `email_auth_challenges` migration 0044).
+- [x] Ghi nhớ 30 ngày: tự điền email+mật khẩu sau đăng xuất khi bật "Ghi nhớ 30 ngày" (`REMEMBERED_SESSION_MS` trong `shared/const.ts`, migration 0045 `remember_login`).
+- [x] Self-host bóc Manus: `DEPLOY_ORACLE_VPS.md` + `Dockerfile.selfhost`, giữ JWT session; login xong chuyển sang `/thong-ke`.
+- [x] Script deploy Oracle VPS: `scripts/deploy-vps.ps1` (local) + `scripts/deploy-on-vps.sh` (trên VPS): pull/build/pm2/cron auto-backup + kiểm tra sức khỏe (commit `0e6494e`).
+- [x] `scripts/db-sync.cjs`: đồng bộ DB an toàn chỉ BỔ SUNG không xóa (commit `a0516e3`).
+- [x] Deploy Botkeep (PaaS): `DEPLOY_BOTKEEP.md`, repo riêng `TCG-VPS-Botkeep.git`, `start` tự build (`npm run build && node dist/index.js`), build tool chuyển sang `dependencies`, domain live `https://tcgmanagervn.bot-keep.xyz`.
+- [x] PWA "Add to Home Screen": `manifest.webmanifest`, icon 192/512, `apple-touch-icon`, favicon, theme-color, meta mobile trong `client/index.html`; `scripts/generate-app-icons.mjs`; logo thật `client/public/app-logo.jpg` của người dùng.
+- [x] Scheduler qua endpoint `/api/scheduled/*` (header `x-cron-secret`): auto-backup, chyusen-monitor, marketplace-auto-sync (`marketplaceAutoSync*.ts`), snkr-shop-auto-sync (`snkrShopDb.ts`), trash-cleanup, activity-log-cleanup. Trên Botkeep không có cron, gọi ngoài bằng HTTP.
+- [x] Tẩy nền ảnh sản phẩm: `server/imageWhiten.ts` (sharp), xử lý theo trường hợp peel-only/không phát hiện nền tối.
+- [x] Nodemailer SMTP cho OTP: dùng trực tiếp trong `server/_core/emailOtp.ts` (`createTransport`/`sendMail` với `SMTP_HOST/PORT/USER/PASS/FROM`), không còn module gửi mail riêng.
+- [x] Đáp ứng mobile cho đăng nhập: nền `/login-bg.png`, autofill trình duyệt mật khẩu (commit `cf59e46`).
+
+### D. Dang dở cần bổ sung tiến độ
+- [ ] Mục `## Tiến trình xử lý ảnh AI` ở cuối file (dòng ~1269) hiện chỉ có TIÊU ĐỀ, chưa có mục con nào — cần viết rõ trạng thái (đang làm / đã xong / gác lại) thay vì để trống.
+
 - [x] Thêm tiến trình nhiều bước với phần trăm và mô tả bước hiện tại
 - [x] Hiển thị trạng thái hoàn tất, lỗi và khả năng thử lại rõ ràng
 - [x] Bổ sung kiểm thử hồi quy và xác minh desktop/mobile
@@ -1539,3 +1581,36 @@
 - [x] Đặt mặc định Card, Box, Pack và Pack Rác theo updatedAt giảm dần
 - [x] Áp dụng cùng thứ tự cho Kho Hàng khi bộ lọc là Tất cả
 - [x] Giữ các lựa chọn sắp xếp Card thủ công và bổ sung kiểm thử hồi quy
+
+## Lịch sử Chūsen (trang /lich-su-chyusen)
+- [x] Trang riêng hiển thị các lượt Chūsen đã có kết quả: Đã trúng, Trượt, Hủy; loại lượt chưa có kết quả
+- [x] Bộ lọc Đã trúng/Trượt/Hủy, tìm kiếm theo sản phẩm/cửa hàng/series, sắp xếp mới nhất trước
+- [x] Thống kê tổng lượt, trúng, trượt, hủy và tỷ lệ trúng (không tính Hủy và Chờ kết quả vào mẫu số)
+- [x] Tái sử dụng dữ liệu chyusen_entries hiện có (kể cả xóa mềm); mỗi lượt chỉ xuất hiện một lần, không tạo bảng mới
+- [x] Menu "Lịch sử Chūsen" ngay dưới Chūsen; giữ nguyên liên kết chuyển lượt trúng sang Mua Hàng
+- [x] Helper shared/chyusenResultHistory.ts (outcome + stats + định dạng ngày), endpoint chyusen.resultHistory, test chyusenResultHistory.test.ts + chyusenResultHistoryUi.test.ts
+
+## Thống kê Chūsen theo cửa hàng (trong modal Thêm 抽選)
+- [x] Khung thống kê hiện ngay khi chọn cửa hàng: tổng lượt, trúng, trượt, hủy, chờ kết quả, tỷ lệ trúng, số lượt có kết quả hợp lệ
+- [x] Tách lịch sử theo từng cửa hàng theo tên chuẩn hóa (customShopName || shop); không gộp hai cửa hàng chỉ vì tên tương tự
+- [x] Tỷ lệ trúng = trúng/(trúng+trượt); mẫu số 0 hiển thị "Chưa đủ dữ liệu"; hiển thị số mẫu và cảnh báo khi mẫu nhỏ
+- [x] Endpoint chyusen.shopStats tính trên mọi entry gồm xóa mềm, phân quyền theo tài khoản; dữ liệu server/DB dùng chung mọi thiết bị (không dùng localStorage)
+- [x] Cửa hàng mới thêm qua dropdown đã lưu DB dùng chung (chyusen_shop_suggestions), chống trùng theo chuẩn hóa khoảng trắng/chữ hoa, ban đầu thống kê = 0
+- [x] Test chyusenShopStatsUi.test.ts; không sửa schema, không migration
+
+## Logo app + PWA (Add to Home Screen)
+- [x] Logo app từ client/public/app-logo.jpg sinh 4 icon: icon-192, icon-512, apple-touch-icon (180), favicon-32
+- [x] manifest.webmanifest (tên app, display standalone, theme-color) + link trong index.html; favicon tab trình duyệt
+- [x] Script scripts/generate-app-icons.mjs tái sinh icon khi đổi logo; kiểm chứng build npm giống môi trường BotKeep
+
+## Sửa lỗi active sidebar (route tiền tố giống nhau)
+- [x] Sửa lỗi cả "Lịch sử Chūsen" và "Lịch Sử" cùng sáng; thay startsWith(item.path) bằng helper isMenuItemActive
+- [x] Quy tắc khớp chính xác route hoặc route con (path + "/") để phân tách /lich-su và /lich-su-chyusen
+- [x] Áp dụng cả 2 điểm: activeMenuItem và render menu; giữ nguyên giao diện/hover/responsive
+- [x] Test server/sidebarActiveMenuUi.test.ts; type-check và test hồi quy DashboardLayout pass
+
+## Triển khai lên BotKeep (PaaS) + tên miền riêng
+- [x] Đổi start script thành npm run build && node dist/index.js; chuyển vite/esbuild/tailwind sang dependencies; xóa plugin lỗi ERESOLVE
+- [x] Repo riêng TCG-VPS-Botkeep.git (không đẩy .env); startup command: npm start; PORT=36013
+- [x] Live: https://tcgmanagervn.bot-keep.xyz (HTTPS do BotKeep cấp); dùng chung TiDB Cloud, dữ liệu cũ giữ nguyên
+- [x] Lưu ý: cron tự động chưa chạy trên BotKeep; ảnh upload có thể mất khi redeploy (cân nhắc S3/R2); Google OAuth redirect đã trỏ tên miền mới
