@@ -72,3 +72,68 @@ export function summarizeChyusenResultHistory(outcomes: ChyusenResultOutcome[]):
     winRate: denominator > 0 ? won / denominator : null,
   };
 }
+
+export type ChyusenShopStats = {
+  /** Tổng mọi lượt đã đăng ký của cửa hàng (gồm chờ kết quả và đã hủy). */
+  total: number;
+  won: number;
+  lost: number;
+  cancelled: number;
+  /** Lượt chưa có kết quả cuối cùng. */
+  pending: number;
+  /** Số mẫu hợp lệ dùng để tính tỷ lệ trúng = trúng + trượt. */
+  sampleSize: number;
+  /** Tỷ lệ trúng = trúng / (trúng + trượt); null khi chưa đủ dữ liệu. */
+  winRate: number | null;
+};
+
+export type ChyusenShopStatsEntry = ChyusenResultHistoryEntry & {
+  shop?: string | null;
+  customShopName?: string | null;
+};
+
+/**
+ * Lấy tên cửa hàng chuẩn của một lượt, giống `displayChyusenShop` ở trang Chūsen
+ * để thống kê nhóm đúng theo cùng một cửa hàng. Tên đã được trim và gộp khoảng
+ * trắng; hai cửa hàng khác tên sẽ không bị gộp nhầm.
+ */
+export function resolveChyusenShopName(entry: { shop?: string | null; customShopName?: string | null }) {
+  const name = (entry.customShopName?.trim() || entry.shop?.trim() || "").replace(/\s+/g, " ");
+  return name || "Khác";
+}
+
+/**
+ * Nhóm thống kê theo từng cửa hàng.
+ *
+ * Dùng chung `getChyusenResultOutcome` nên mỗi lượt chỉ rơi về đúng một kết quả
+ * cuối cùng (Đã trúng / Trượt / Hủy). Lượt chưa có kết quả được đếm riêng vào
+ * `pending` và KHÔNG tính vào mẫu số tỷ lệ trúng, đúng yêu cầu nghiệp vụ.
+ * Kết quả trả về map theo tên cửa hàng, chỉ chứa các cửa hàng có dữ liệu.
+ */
+export function summarizeChyusenShopStats(entries: ChyusenShopStatsEntry[]): Record<string, ChyusenShopStats> {
+  const byShop = new Map<string, { won: number; lost: number; cancelled: number; pending: number }>();
+  for (const entry of entries) {
+    const shop = resolveChyusenShopName(entry);
+    const bucket = byShop.get(shop) ?? { won: 0, lost: 0, cancelled: 0, pending: 0 };
+    const outcome = getChyusenResultOutcome(entry);
+    if (outcome === "won") bucket.won += 1;
+    else if (outcome === "lost") bucket.lost += 1;
+    else if (outcome === "cancelled") bucket.cancelled += 1;
+    else bucket.pending += 1;
+    byShop.set(shop, bucket);
+  }
+  const result: Record<string, ChyusenShopStats> = {};
+  byShop.forEach((bucket, shop) => {
+    const sampleSize = bucket.won + bucket.lost;
+    result[shop] = {
+      total: bucket.won + bucket.lost + bucket.cancelled + bucket.pending,
+      won: bucket.won,
+      lost: bucket.lost,
+      cancelled: bucket.cancelled,
+      pending: bucket.pending,
+      sampleSize,
+      winRate: sampleSize > 0 ? bucket.won / sampleSize : null,
+    };
+  });
+  return result;
+}

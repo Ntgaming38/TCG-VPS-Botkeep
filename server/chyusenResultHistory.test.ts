@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatChyusenResultDate, getChyusenResultOutcome, summarizeChyusenResultHistory } from "../shared/chyusenResultHistory";
+import { formatChyusenResultDate, getChyusenResultOutcome, resolveChyusenShopName, summarizeChyusenResultHistory, summarizeChyusenShopStats } from "../shared/chyusenResultHistory";
 
 describe("phân loại lịch sử kết quả Chūsen", () => {
   it("ưu tiên Đã trúng dù trạng thái khác không nhất quán", () => {
@@ -29,5 +29,43 @@ describe("phân loại lịch sử kết quả Chūsen", () => {
     expect(formatChyusenResultDate(null)).toBeNull();
     expect(formatChyusenResultDate(undefined)).toBeNull();
     expect(formatChyusenResultDate("khong-phai-ngay")).toBeNull();
+  });
+});
+
+describe("thống kê Chūsen theo cửa hàng", () => {
+  it("lấy tên cửa hàng chuẩn, ưu tiên tên tự nhập và gộp khoảng trắng", () => {
+    expect(resolveChyusenShopName({ shop: "Joshin", customShopName: null })).toBe("Joshin");
+    expect(resolveChyusenShopName({ shop: "Joshin", customShopName: "  Joshin  Shibuya  " })).toBe("Joshin Shibuya");
+    expect(resolveChyusenShopName({ shop: null, customShopName: null })).toBe("Khác");
+  });
+
+  it("tách thống kê riêng cho từng cửa hàng, không gộp cửa hàng khác tên", () => {
+    const stats = summarizeChyusenShopStats([
+      { id: 1, shop: "Joshin", applicationStatus: "won", resultStatus: "won", deletedAt: null },
+      { id: 2, shop: "Joshin", applicationStatus: "lost", resultStatus: "lost", deletedAt: new Date() },
+      { id: 3, shop: "Joshin", applicationStatus: "registered", resultStatus: "pending", deletedAt: null },
+      { id: 4, shop: "Joshin", applicationStatus: "cancelled", resultStatus: "pending", deletedAt: null },
+      { id: 5, shop: "Geo", applicationStatus: "lost", resultStatus: "lost", deletedAt: new Date() },
+    ]);
+    expect(stats.Joshin).toMatchObject({ total: 4, won: 1, lost: 1, cancelled: 1, pending: 1, sampleSize: 2, winRate: 1 / 2 });
+    expect(stats.Geo).toMatchObject({ total: 1, won: 0, lost: 1, cancelled: 0, pending: 0, sampleSize: 1, winRate: 0 });
+  });
+
+  it("cửa hàng mới chỉ có lượt chờ kết quả thì tỷ lệ trúng là Chưa đủ dữ liệu", () => {
+    const stats = summarizeChyusenShopStats([
+      { id: 1, shop: "ShopMoi", applicationStatus: "registered", resultStatus: "pending", deletedAt: null },
+      { id: 2, shop: "ShopMoi", applicationStatus: "registered", resultStatus: "pending", deletedAt: null },
+    ]);
+    expect(stats.ShopMoi).toMatchObject({ total: 2, won: 0, lost: 0, cancelled: 0, pending: 2, sampleSize: 0, winRate: null });
+  });
+
+  it("không tính lượt hủy vào mẫu số tỷ lệ trúng", () => {
+    const stats = summarizeChyusenShopStats([
+      { id: 1, shop: "Joshin", applicationStatus: "won", resultStatus: "won", deletedAt: null },
+      { id: 2, shop: "Joshin", applicationStatus: "cancelled", resultStatus: "pending", deletedAt: null },
+      { id: 3, shop: "Joshin", applicationStatus: "cancelled", resultStatus: "pending", deletedAt: null },
+    ]);
+    // 1 trúng, 2 hủy → mẫu số chỉ 1 (không cộng hủy) → 100%
+    expect(stats.Joshin).toMatchObject({ won: 1, cancelled: 2, sampleSize: 1, winRate: 1 });
   });
 });

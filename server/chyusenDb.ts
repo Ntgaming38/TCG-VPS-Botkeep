@@ -13,6 +13,7 @@ import {
 import { getDb, serializeActivityChange } from "./db";
 import { getChyusenTimeState, getChyusenUrgency } from "./chyusenUtils";
 import { createTrashItem, markLatestTrashItemRestored } from "./trashDb";
+import { summarizeChyusenShopStats } from "@shared/chyusenResultHistory";
 
 export type ChyusenEntryInput = {
   title: string;
@@ -295,6 +296,19 @@ export async function listChyusenResultHistory(userId: number) {
     urgency: getChyusenUrgency(entry.applicationEnd),
     fieldConfidence: entry.fieldConfidence ? JSON.parse(entry.fieldConfidence) : {},
   }));
+}
+
+/**
+ * Thống kê Chūsen theo từng cửa hàng cho tài khoản hiện tại.
+ *
+ * Tái sử dụng `listChyusenResultHistory` (KHÔNG loại lượt đã xóa mềm) nên con
+ * số Trượt/Đã trúng vẫn đầy đủ dù các lượt đó đã bị xóa mềm vào Thùng rác.
+ * Phân quyền được giữ nguyên qua `userId`. Mỗi cửa hàng chỉ xuất hiện một lần
+ * theo đúng tên, không gộp lịch sử của hai cửa hàng khác tên.
+ */
+export async function summarizeChyusenShopStatsForUser(userId: number) {
+  const entries = await listChyusenResultHistory(userId);
+  return summarizeChyusenShopStats(entries);
 }
 
 export async function upsertChyusenSource(userId: number, sourceUrl: string, values: {
