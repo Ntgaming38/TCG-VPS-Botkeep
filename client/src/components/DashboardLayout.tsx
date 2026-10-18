@@ -349,15 +349,21 @@ function DashboardLayoutContent({
 
       <SidebarInset>
         {isMobile && (pullDistance > 0 || isRefreshing) && <div className="fixed left-1/2 top-2 z-[60] flex -translate-x-1/2 items-center gap-2 rounded-full border border-primary/40 bg-background/95 px-3 py-1.5 text-xs font-medium text-primary shadow-lg backdrop-blur"><RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />{isRefreshing ? "Đang làm mới..." : pullDistance >= 72 ? "Thả để làm mới" : "Kéo xuống để làm mới"}</div>}
-        <div className="flex border-b border-primary/30 h-14 items-center justify-between bg-background/95 px-3 backdrop-blur sticky top-0 z-40">
-          {isMobile ? (
-            <div className="flex items-center gap-2">
-              <SidebarTrigger className="h-12 w-12 min-h-12 min-w-12 rounded-xl bg-sidebar-accent/15 shadow-sm transition-colors hover:bg-sidebar-accent/25 [&>svg]:h-5 [&>svg]:w-5" />
-              <span className="text-sm font-medium text-foreground">
-                {activeMenuItem?.label ?? "Menu"}
-              </span>
-            </div>
-          ) : <span className="text-sm font-medium text-muted-foreground">{activeMenuItem?.label ?? "TCG Manager"}</span>}
+        <div className="flex border-b border-primary/30 min-h-14 items-center justify-between bg-background/95 px-3 backdrop-blur sticky top-0 z-40 pt-[calc(env(safe-area-inset-top,0px)+10px)]">
+          <div className="flex items-center gap-2 sidebar-mobile-trigger left-0">
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              aria-label="Mở menu"
+              className="flex h-12 w-12 min-h-12 min-w-12 items-center justify-center rounded-xl bg-sidebar-accent/15 shadow-sm transition-colors hover:bg-sidebar-accent/25"
+            >
+              <PanelLeft className="h-5 w-5" />
+            </button>
+            <span className="text-sm font-medium text-foreground">
+              {activeMenuItem?.label ?? "Menu"}
+            </span>
+          </div>
+          <span className="sidebar-desktop-label text-sm font-medium text-muted-foreground">{activeMenuItem?.label ?? "TCG Manager"}</span>
           <NotificationCenter />
         </div>
         <main className="flex-1 p-4 md:p-6">{children}</main>
