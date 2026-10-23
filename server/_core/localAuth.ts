@@ -70,7 +70,10 @@ export function registerLocalAuthRoutes(app: Express) {
         expiresInMs,
       });
       const cookieOptions = getSessionCookieOptions(req);
-      res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, ...(rememberMe ? { maxAge: expiresInMs } : {}) });
+      // Always give the session cookie a Max-Age: without one it is a
+      // session cookie and browsers/PWAs delete it when the app closes,
+      // forcing a fresh login on every open regardless of token expiry.
+      res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: expiresInMs });
       return res.json({ ok: true });
     } catch (e: any) {
       console.error("[LocalAuth] login failed", e?.cause ?? e);
