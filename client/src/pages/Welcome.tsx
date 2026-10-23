@@ -2,9 +2,25 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { Play, ArrowRight, Sparkles } from "lucide-react";
+import { useEffect } from "react";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 export default function Welcome() {
   const [, setLocation] = useLocation();
+  const { user, loading } = useAuth();
+
+  // Đã đăng nhập mà mở trang gốc thì vào thẳng app, không dừng ở màn
+  // hình Welcome — trước đây màn hình này hiện bất kể trạng thái đăng
+  // nhập nên rất dễ gây hiểu nhầm là bị đăng xuất.
+  useEffect(() => {
+    if (!loading && user) setLocation("/thong-ke");
+  }, [loading, user, setLocation]);
+
+  // Đang kiểm tra phiên (hoặc sắp chuyển hướng): chỉ hiện nền trống
+  // để tránh chớp màn hình Welcome trước khi vào app.
+  if (loading || user) {
+    return <div className="min-h-[100dvh] bg-[#070707]" />;
+  }
 
   const containerVariants = {
     hidden: { opacity: 0 },
