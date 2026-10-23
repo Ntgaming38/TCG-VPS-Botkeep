@@ -1,10 +1,10 @@
 FROM node:20-bookworm-slim
 WORKDIR /app
-RUN npm i -g pnpm
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+# Repo dùng npm (package-lock.json là lockfile duy nhất được commit).
+COPY package.json package-lock.json ./
+RUN npm ci
 COPY . .
-RUN pnpm build
+RUN npm run build
 ENV NODE_ENV=production
 EXPOSE 3000
 CMD ["node", "dist/index.js"]

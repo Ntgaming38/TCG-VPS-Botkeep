@@ -329,7 +329,7 @@ export const appRouter = router({
 
     get: protectedProcedure
       .input(z.object({ id: z.number() }))
-      .query(({ input }) => db.getProductById(input.id)),
+      .query(({ ctx, input }) => db.getProductByIdForUser(input.id, ctx.user.id)),
 
     suggestions: protectedProcedure
       .input(z.object({ search: z.string() }))

@@ -21,6 +21,7 @@ import { runSnkrShopAutoSync } from "../snkrShopDb";
 import { runTrashAutoCleanup } from "../trashAutoCleanup";
 import { runScheduledAutoBackup } from "../backupScheduler";
 import { runActivityLogCleanup } from "../activityLogCleanup";
+import { validateProductImageUpload } from "../uploadImage";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -162,21 +163,37 @@ async function startServer() {
     }
   });
 
-  // Image upload endpoint
+  // Image upload endpoint — authenticated users only. Uploaded files are
+  // served from this same origin, so the payload must also prove it is a
+  // real raster image (see validateProductImageUpload).
   app.post("/api/upload-image", async (req, res) => {
+    let user;
     try {
-      const { base64, filename, contentType } = req.body;
-      if (!base64 || !filename) {
+      user = await sdk.authenticateRequest(req);
+    } catch {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    if (user.isCron) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    try {
+      const { base64, filename, contentType } = req.body ?? {};
+      if (typeof base64 !== "string" || !base64) {
         return res.status(400).json({ error: "Missing base64 or filename" });
       }
       const buffer = Buffer.from(base64, "base64");
-      const ext = filename.split(".").pop() || "png";
-      const key = `products/${Date.now()}.${ext}`;
-      const result = await storagePut(key, buffer, contentType || "image/png");
+      const validated = validateProductImageUpload({ filename, contentType, buffer });
+      const key = `products/${user.id}/${Date.now()}.${validated.ext}`;
+      const result = await storagePut(key, buffer, validated.contentType);
       res.json({ url: result.url, key: result.key });
     } catch (error: any) {
-      console.error("[Upload] Error:", error.message);
-      res.status(500).json({ error: error.message });
+      const message = error instanceof Error ? error.message : String(error);
+      const isValidationError =
+        error instanceof Error &&
+        /image|filename|size limit/i.test(message) &&
+        !/storage|forge|s3/i.test(message);
+      console.error("[Upload] Error:", message);
+      res.status(isValidationError ? 400 : 500).json({ error: message });
     }
   });
 
