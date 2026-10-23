@@ -37,6 +37,8 @@ import { playChyusenNotificationSound } from "@/lib/chyusenNotificationSound";
 import { shouldTriggerPullToRefresh } from "@shared/pullToRefresh";
 import { NotificationCenter } from "./NotificationCenter";
 import { AccountSettingsDialog } from "./AccountSettingsDialog";
+import { SupportDialog } from "./SupportDialog";
+import { Headphones } from "lucide-react";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "TCG Manager", path: "/thong-ke" },
@@ -148,6 +150,7 @@ function DashboardLayoutContent({
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
   const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -331,6 +334,10 @@ function DashboardLayoutContent({
                   <UserRoundCog className="mr-2 h-4 w-4" />
                   <span>Cài đặt tài khoản</span>
                 </DropdownMenuItem>
+                <DropdownMenuItem onSelect={(event) => { event.preventDefault(); setSupportOpen(true); }} className="cursor-pointer text-cyan-400 focus:text-cyan-300">
+                  <Headphones className="mr-2 h-4 w-4" />
+                  <span>Liên hệ hỗ trợ</span>
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={logout} className="cursor-pointer text-destructive focus:text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Đăng xuất</span>
@@ -338,6 +345,7 @@ function DashboardLayoutContent({
               </DropdownMenuContent>
             </DropdownMenu>
             <AccountSettingsDialog open={accountSettingsOpen} onOpenChange={setAccountSettingsOpen} user={user} />
+            <SupportDialog open={supportOpen} onOpenChange={setSupportOpen} />
           </SidebarFooter>
         </Sidebar>
         <div
