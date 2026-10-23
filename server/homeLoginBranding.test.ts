@@ -19,7 +19,7 @@ describe("Login branding", () => {
     expect(home).toContain('whitespace-nowrap');
     expect(home).toContain('text-[clamp(1.75rem,8vw,3.75rem)]');
     expect(home).toContain('pb-[clamp(9rem,20vh,15.5rem)]');
-    expect(home).toContain('Phiên bản v1.1');
+    expect(home).toContain('Phiên bản v1.2');
     expect(home).toContain('setTimeout(() => {');
     expect(home).toContain('}, 520);');
   });
