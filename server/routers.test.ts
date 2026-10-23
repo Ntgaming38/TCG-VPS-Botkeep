@@ -22,6 +22,7 @@ vi.mock("./db", async (importOriginal) => {
   return {
     ...actual,
     listActivityLogs: vi.fn(),
+    getProductByIdForUser: vi.fn(),
   };
 });
 
@@ -99,6 +100,27 @@ describe("appRouter", () => {
       const ctx = createUnauthContext();
       const caller = appRouter.createCaller(ctx);
       await expect(caller.products.list({})).rejects.toThrow();
+    });
+
+    it("requires authentication for products.get", async () => {
+      const ctx = createUnauthContext();
+      const caller = appRouter.createCaller(ctx);
+      await expect(caller.products.get({ id: 42 })).rejects.toThrow();
+    });
+
+    it("scopes products.get to the caller's user id (IDOR guard)", async () => {
+      const ctx = createAuthContext();
+      const caller = appRouter.createCaller(ctx);
+      const mocked = vi.mocked(db.getProductByIdForUser);
+      mocked.mockReset();
+      mocked.mockResolvedValue({ id: 42, userId: 1, name: "Test Card" } as any);
+      const result = await caller.products.get({ id: 42 });
+      expect(mocked).toHaveBeenCalledWith(42, 1);
+      expect(result?.name).toBe("Test Card");
+      // Another user's product resolves to undefined, same as not found.
+      mocked.mockResolvedValue(undefined);
+      await expect(caller.products.get({ id: 43 })).resolves.toBeUndefined();
+      expect(mocked).toHaveBeenLastCalledWith(43, 1);
     });
 
     it("requires authentication for products.create", async () => {
