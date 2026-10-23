@@ -210,6 +210,24 @@ export async function getProductById(id: number) {
   return result[0];
 }
 
+/**
+ * Ownership-scoped lookup for API surfaces. Returns undefined both when
+ * the product does not exist and when it belongs to another user, so
+ * callers cannot probe other users' product ids (IDOR).
+ * Internal flows that already verified ownership of the parent record
+ * (purchase/sale) keep using getProductById.
+ */
+export async function getProductByIdForUser(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .select()
+    .from(products)
+    .where(and(eq(products.id, id), eq(products.userId, userId)))
+    .limit(1);
+  return result[0];
+}
+
 export async function createProduct(data: InsertProduct) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
