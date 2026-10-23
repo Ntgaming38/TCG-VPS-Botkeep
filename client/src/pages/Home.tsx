@@ -83,7 +83,7 @@ export default function Home() {
 
           {/* Version text */}
           <p className="text-white/55 text-xs font-medium">
-            Phiên bản v1.1
+            Phiên bản v1.2
           </p>
         </div>
       </div>

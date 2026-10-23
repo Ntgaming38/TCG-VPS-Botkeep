@@ -2,6 +2,7 @@ import { startLogin } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { TRPCClientError } from "@trpc/client";
 import { useCallback, useEffect, useMemo } from "react";
+import { useLocation } from "wouter";
 
 type UseAuthOptions = {
   redirectOnUnauthenticated?: boolean;
@@ -15,6 +16,7 @@ export function useAuth(options?: UseAuthOptions) {
   // desync it from an in-flight login's `state`.
   const { redirectOnUnauthenticated = false, redirectPath } = options ?? {};
   const utils = trpc.useUtils();
+  const [, setLocation] = useLocation();
 
   const meQuery = trpc.auth.me.useQuery(undefined, {
     retry: false,
@@ -47,8 +49,11 @@ export function useAuth(options?: UseAuthOptions) {
       } catch {}
       utils.auth.me.setData(undefined, null);
       await utils.auth.me.invalidate();
+      // Sau khi đăng xuất, quay về màn hình đầu tiên (Welcome)
+      setLocation("/");
+      window.location.href = "/";
     }
-  }, [logoutMutation, utils]);
+  }, [logoutMutation, utils, setLocation]);
 
   const state = useMemo(() => {
     localStorage.setItem(

@@ -6,6 +6,9 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
+import Welcome from "./pages/Welcome";
+import ChooseFranchise from "./pages/ChooseFranchise";
+import FranchiseIntro from "./pages/FranchiseIntro";
 import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Products";
 import Purchases from "./pages/Purchases";
@@ -34,7 +37,10 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 function Router() {
   return (
     <Switch>
-      <Route path={"/"} component={Home} />
+      <Route path={"/"} component={Welcome} />
+      <Route path={"/welcome"} component={Welcome} />
+      <Route path={"/choose-franchise"} component={ChooseFranchise} />
+      <Route path={"/intro/:franchise"} component={FranchiseIntro} />
       <Route path={"/login"} component={Login} />
       <Route path={"/thong-ke"}>
         <ProtectedRoute component={Dashboard} />

@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/lib/trpc";
-import { Plus, Search, DollarSign, Calendar, TrendingUp, ArrowUpDown, ArrowUp, ArrowDown, Pencil, Pin, Trash2, X } from "lucide-react";
+import { Plus, Search, DollarSign, Calendar, TrendingUp, ArrowUpDown, ArrowUp, ArrowDown, Pencil, Pin, Trash2, X, Eye } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle } from "lucide-react";
@@ -17,6 +17,7 @@ import { formatSignedYen, formatYen } from "@shared/formatYen";
 import { filterSalesByDateRange, summarizeSales } from "@shared/salesDateFilter";
 import { getQuickSaleDateRange, type SaleQuickPeriod } from "@shared/salesQuickDateRange";
 import { getSaleLocationSelectValue, resolveSaleLocationSelection } from "@shared/saleLocation";
+import SalesReceipt from "@/components/SalesReceipt";
 
 const PLATFORMS = [
   { value: "user", label: "Người Dùng" },
@@ -42,6 +43,7 @@ export default function Sales() {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedSale, setSelectedSale] = useState<any>(null);
+  const [showReceipt, setShowReceipt] = useState(false);
   const [editForm, setEditForm] = useState({ quantity: 1, salePrice: 0, note: "" });
   const [newSale, setNewSale] = useState({
     productId: 0, quantity: 1, salePrice: 0,
@@ -72,6 +74,9 @@ export default function Sales() {
       toast.success("Đã tạo giao dịch bán thành công!");
       setShowAddDialog(false);
       setNewSale({ productId: 0, quantity: 1, salePrice: 0, platform: "user", saleLocation: null, fee: 0, shippingFee: 0, otherCost: 0, note: "", isDamaged: false });
+      setFromDate("");
+      setToDate("");
+      setQuickPeriod(null);
       invalidateAll();
     },
     onError: (err) => toast.error(err.message),
@@ -434,6 +439,9 @@ export default function Sales() {
                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-blue-400" onClick={() => handleEditClick(sale)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-green-400" onClick={() => { setSelectedSale(sale); setShowReceipt(true); }}>
+                        <Eye className="h-4 w-4" />
+                      </Button>
                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-red-400" onClick={() => handleDeleteClick(sale)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -471,6 +479,12 @@ export default function Sales() {
           </Card>
        </div>
       )}
+
+      <SalesReceipt 
+        isOpen={showReceipt} 
+        onClose={() => setShowReceipt(false)} 
+        saleData={selectedSale} 
+      />
 
       {/* Edit Sale Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>

@@ -1614,3 +1614,30 @@
 - [x] Repo riêng TCG-VPS-Botkeep.git (không đẩy .env); startup command: npm start; PORT=36013
 - [x] Live: https://tcgmanagervn.bot-keep.xyz (HTTPS do BotKeep cấp); dùng chung TiDB Cloud, dữ liệu cũ giữ nguyên
 - [x] Lưu ý: cron tự động chưa chạy trên BotKeep; ảnh upload có thể mất khi redeploy (cân nhắc S3/R2); Google OAuth redirect đã trỏ tên miền mới
+
+## Phiên bản v1.2 - Giao diện Đón tiếp, Dual Universe Split Screen & RGB Animation
+- [x] Nâng cấp số hiệu phiên bản lên v1.2 (package.json: 1.2.0, Home.tsx: v1.2, huy hiệu v1.2 tại Welcome.tsx).
+- [x] Màn hình đón chào (Welcome.tsx - /):
+  - [x] Hình nền Sân đấu Pokémon Arena rực rỡ (welcome-bg.jpg), tối ưu hiển thị cho cả PC & Điện thoại.
+  - [x] Tiêu đề TCG MANAGER chuyển sang Font Gaming Esports quốc tế (Orbitron), kích thước co giãn linh hoạt (text-2xl đến text-5xl), giải quyết triệt để lỗi tràn/mất chữ trên mobile.
+  - [x] Hiệu ứng RGB Animation đa sắc màu (rgb-text-animated, rgb-glow, rgb-border-animated) chuyển màu mượt mà.
+- [x] Màn hình chọn thế giới (ChooseFranchise.tsx - /choose-franchise):
+  - [x] Thiết kế chia đôi màn hình đối đầu (Dual Universe Split Screen 50/50) giữa Pokémon (trái/trên) và One Piece (phải/dưới).
+  - [x] Hiệu ứng tương tác động (Interactive Hover Expand): mở rộng 58% bên được di chuột trên PC, thu gọn bên còn lại.
+  - [x] Dải phân cách Laser LED RGB và huy hiệu lơ lửng "TCG VS" ở trung tâm màn hình.
+  - [x] Tiêu đề "POKÉMON" và "ONE PIECE" chạy hiệu ứng RGB Animation đa sắc màu.
+  - [x] Tự động lưu lựa chọn thế giới (tcg_selected_franchise) vào localStorage.
+- [x] Màn hình giới thiệu thế giới (FranchiseIntro.tsx - /intro/:franchise):
+  - [x] Hình nền chất lượng cao cho từng thương hiệu (bg-pokemon.jpg và bg-onepiece.jpg).
+  - [x] Thiết kế thẻ kính mờ cao cấp (Glassmorphism), hiệu ứng RGB đồng bộ, hỗ trợ nút "Tiếp tục Đăng nhập" lưu preference.
+- [x] Màn hình đăng nhập (Login.tsx - /login):
+  - [x] Đổi nút "Đăng nhập vào Kho" thành "Đăng Nhập".
+  - [x] Chữ "ĐĂNG NHẬP" và logo TCG MANAGER chạy hiệu ứng RGB Animation sống động.
+  - [x] Gỡ bỏ dòng chữ cấu hình: "Tài khoản quản trị dùng ADMIN_PASSWORD trong cấu hình máy chủ".
+- [x] Tối ưu hóa toàn diện cho Điện thoại di động (Mobile & PWA):
+  - [x] Hỗ trợ Safe Area (env(safe-area-inset-top) và env(safe-area-inset-bottom)) cho các thiết bị tai thỏ, Dynamic Island và thanh vuốt Home bar.
+  - [x] Khung hình cố định vừa vặn 100dvh, loại bỏ thanh cuộn thừa, tránh đè chữ hoặc icon lên nút bấm.
+  - [x] Bổ sung touch-manipulation loại bỏ độ trễ 300ms khi chạm và phản hồi rung nhẹ active:scale.
+- [x] Tối ưu luồng Đăng xuất (useAuth.ts):
+  - [x] Sau khi bấm Đăng xuất, hệ thống hủy sạch phiên làm việc và tự động quay về Màn hình đầu tiên (/ - Welcome) thay vì choose-franchise.
+- [x] Đã kiểm thử tự động toàn bộ test suite (145 files / 425 tests PASS 100%, TypeScript build 0 lỗi).
