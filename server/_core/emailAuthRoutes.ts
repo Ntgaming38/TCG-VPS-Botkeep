@@ -21,7 +21,9 @@ function sendSession(req: Request, res: Response, user: NonNullable<Awaited<Retu
     sessionVersion: user.sessionVersion,
     expiresInMs,
   }).then((token) => {
-    res.cookie(COOKIE_NAME, token, { ...getSessionCookieOptions(req), ...(rememberMe ? { maxAge: expiresInMs } : {}) });
+    // Always give the session cookie a Max-Age (see localAuth): a
+    // session cookie without one is dropped when the browser/PWA closes.
+    res.cookie(COOKIE_NAME, token, { ...getSessionCookieOptions(req), maxAge: expiresInMs });
   });
 }
 
