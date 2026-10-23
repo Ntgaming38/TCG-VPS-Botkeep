@@ -23,6 +23,7 @@ import { ProductImageEditControls } from "@/components/ProductImageEditControls"
 import { ProductTypeBadge } from "@/components/ProductTypeBadge";
 import { ProductNameSuggestions } from "@/components/ProductNameSuggestions";
 import { sortProductsByRecentPurchase } from "@shared/productRecentOrder";
+import { COOKIE_NAME } from "@shared/const";
 import { Plus, Search, Filter, Package, LayoutGrid, List, MoreVertical, Pencil, Trash2, ImagePlus, RefreshCw, Loader2, CheckCircle2, CircleAlert, PaintBucket } from "lucide-react";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useLocation } from "wouter";
@@ -191,9 +192,23 @@ export default function Products() {
       const reader = new FileReader();
       reader.onload = async () => {
         const base64 = (reader.result as string).split(",")[1];
+        // /api/upload-image requires a logged-in session: send the cookie,
+        // plus the same Bearer fallback the tRPC client uses when the
+        // browser blocks cookies (Safari ITP / WebView).
+        const uploadHeaders: Record<string, string> = { "Content-Type": "application/json" };
+        try {
+          const raw = sessionStorage.getItem("manus-cookie");
+          const prefix = `${COOKIE_NAME}=`;
+          const pair = raw?.split(";").find(s => s.trim().startsWith(prefix));
+          const token = pair?.trim().slice(prefix.length);
+          if (token) uploadHeaders.Authorization = `Bearer ${token}`;
+        } catch {
+          // sessionStorage unavailable — cookie auth still applies.
+        }
         const response = await fetch("/api/upload-image", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          headers: uploadHeaders,
           body: JSON.stringify({ base64, filename: file.name, contentType: file.type }),
         });
         if (response.ok) {
