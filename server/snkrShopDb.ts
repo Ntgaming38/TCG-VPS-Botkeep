@@ -5,6 +5,7 @@ import { getDb } from "./db";
 import { fetchSnkrdunkPrice, fetchSnkrdunkProductMetadata, fetchSnkrdunkQuantityPrices, isSnkrdunkGenericImageUrl, isValidSnkrdunkUrl } from "./snkrdunk";
 import { tryWhitenBuffer, whitenAndStoreImage } from "./imageWhiten";
 import { processMarketplaceManualSyncBatch } from "./marketplaceManualSyncBatch";
+import { buildSnkrPriceChangePush, sendPushToUser, type SnkrPriceChange } from "./push";
 import { storagePut } from "./storage";
 
 export type SnkrShopProductType = "card" | "box" | "pack";
@@ -312,11 +313,13 @@ export async function syncSnkrShopItem(itemId: number, userId: number, syncMode:
     }
     const storedImage = await persistSnkrShopProductImage(metadata.imageUrl, userId, itemId);
     const nextImageUrl = storedImage.imageUrl ?? (isStoredProductImage(item.imageUrl) ? item.imageUrl : null);
+    const previousPrice = Number(item.currentPrice || 0);
     await db.update(snkrShopItems).set({ currentPrice: String(result.price), lastSyncedAt: syncedAt, lastSyncError: storedImage.error, sourceTitle: metadata.title, imageUrl: nextImageUrl })
       .where(and(eq(snkrShopItems.id, itemId), eq(snkrShopItems.userId, userId)));
-    if (Number(item.currentPrice || 0) !== result.price) {
+    if (previousPrice !== result.price) {
       await db.insert(snkrShopPriceHistory).values({ itemId, price: String(result.price), source: "snkrdunk" });
     }
+    const priceChange = previousPrice !== result.price ? { oldPrice: previousPrice, newPrice: result.price } : null;
     await db.insert(activityLogs).values({
       userId,
       action: syncMode === "auto" ? "snkr_shop_auto_price_synced" : "snkr_shop_manual_price_synced",
@@ -325,7 +328,7 @@ export async function syncSnkrShopItem(itemId: number, userId: number, syncMode:
       entityId: itemId,
       newValue: JSON.stringify({ syncMode, totalCount: 1, syncedCount: 1, failedCount: 0 }),
     });
-    return { itemId, name: metadata.title || item.name, currentPrice: result.price, lastSyncedAt: syncedAt, sourceUrl: item.sourceUrl };
+    return { itemId, name: metadata.title || item.name, currentPrice: result.price, lastSyncedAt: syncedAt, sourceUrl: item.sourceUrl, priceChange };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Không thể đồng bộ URL SNKRDUNK này.";
     await db.update(snkrShopItems).set({ lastSyncError: message }).where(and(eq(snkrShopItems.id, itemId), eq(snkrShopItems.userId, userId)));
@@ -397,8 +400,14 @@ export async function runSnkrShopAutoSync(taskUid: string): Promise<SnkrShopAuto
   }
   const batchSize = Math.min(Math.max(config.batchSize || 12, 1), 20);
   const items = await db.select().from(snkrShopItems).orderBy(asc(snkrShopItems.lastSyncedAt), asc(snkrShopItems.updatedAt), asc(snkrShopItems.id)).limit(batchSize);
+  const priceChangesByUser = new Map<number, SnkrPriceChange[]>();
   const outcomes = await processMarketplaceManualSyncBatch(items, async (item) => {
-    await syncSnkrShopItem(item.id, item.userId, "auto");
+    const result = await syncSnkrShopItem(item.id, item.userId, "auto");
+    if (result.priceChange) {
+      const changes = priceChangesByUser.get(item.userId) ?? [];
+      changes.push({ name: result.name, oldPrice: result.priceChange.oldPrice, newPrice: result.priceChange.newPrice });
+      priceChangesByUser.set(item.userId, changes);
+    }
   }, 3);
   const failedCount = outcomes.filter((outcome) => outcome.status === "rejected").length;
   const updatedCount = outcomes.length - failedCount;
@@ -425,6 +434,18 @@ export async function runSnkrShopAutoSync(taskUid: string): Promise<SnkrShopAuto
       entityId: null,
       newValue: JSON.stringify({ syncMode: "auto", ...summary }),
     });
+  }
+  // One aggregated push per user whose watched items actually changed price
+  // during this automatic run. Manual syncs never push — the user is already
+  // looking at the app. Delivery is best-effort and never fails the sync.
+  for (const [userId, changes] of Array.from(priceChangesByUser.entries())) {
+    const payload = buildSnkrPriceChangePush(changes);
+    if (!payload) continue;
+    try {
+      await sendPushToUser(userId, payload);
+    } catch {
+      /* best-effort delivery */
+    }
   }
   return { checkedCount: outcomes.length, updatedCount, failedCount, skipped: false };
 }

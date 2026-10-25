@@ -581,7 +581,26 @@ export async function deleteChyusenNotification(userId: number, notificationId: 
 export async function createChyusenNotification(values: typeof chyusenNotifications.$inferInsert) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
+  const [existing] = await db.select({ id: chyusenNotifications.id }).from(chyusenNotifications)
+    .where(and(eq(chyusenNotifications.userId, values.userId), eq(chyusenNotifications.notificationKey, values.notificationKey))).limit(1);
   await db.insert(chyusenNotifications).values(values).onDuplicateKeyUpdate({ set: { notificationKey: values.notificationKey } });
+  if (!existing) {
+    // Mirror genuinely new in-app notices to the user's subscribed devices.
+    // Fire-and-forget: push delivery must never break notification creation.
+    void (async () => {
+      try {
+        const { sendPushToUser } = await import("./push");
+        await sendPushToUser(values.userId, {
+          title: values.title,
+          body: values.message,
+          url: values.link ?? "/chyusen",
+          tag: `chyusen-${values.type}`,
+        });
+      } catch {
+        /* best-effort delivery */
+      }
+    })();
+  }
 }
 
 export async function getChyusenNotificationSettings(userId: number) {

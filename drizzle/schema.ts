@@ -577,3 +577,36 @@ export const chyusenMonitorConfig = mysqlTable("chyusen_monitor_config", {
   isEnabled: int("isEnabled").default(1).notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
+
+/**
+ * Web Push (RFC 8291/8292) delivery for the installed PWA. One server-wide
+ * VAPID keypair lives in push_config (generated lazily on first use, so no
+ * env setup is required); each browser/device a user enables notifications
+ * on registers one row in push_subscriptions, keyed by its push endpoint.
+ */
+export const pushConfig = mysqlTable("push_config", {
+  id: int("id").autoincrement().primaryKey(),
+  vapidPublicKey: varchar("vapidPublicKey", { length: 255 }).notNull(),
+  /** EC private key as a JWK JSON string. Server-only; never exposed via API. */
+  vapidPrivateKeyJwk: text("vapidPrivateKeyJwk").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PushConfig = typeof pushConfig.$inferSelect;
+
+export const pushSubscriptions = mysqlTable("push_subscriptions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  endpoint: varchar("endpoint", { length: 2048 }).notNull(),
+  p256dh: varchar("p256dh", { length: 255 }).notNull(),
+  auth: varchar("auth", { length: 255 }).notNull(),
+  userAgent: varchar("userAgent", { length: 500 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => [
+  uniqueIndex("push_subscriptions_endpoint_unique").on(table.endpoint),
+  index("push_subscriptions_user_idx").on(table.userId),
+]);
+
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+export type InsertPushSubscription = typeof pushSubscriptions.$inferInsert;
