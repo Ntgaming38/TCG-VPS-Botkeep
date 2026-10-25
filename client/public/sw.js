@@ -1,13 +1,102 @@
-/* TCG Manager service worker — Web Push delivery for the installed PWA.
-   Kept intentionally small: it only receives push notifications and routes
-   taps back into the app. No offline caching, so the app always loads fresh. */
+/* TCG Manager service worker.
+   Two jobs:
+   1. Web Push delivery for the installed PWA (push + notificationclick).
+   2. Offline app shell: cache the SPA shell and its hashed assets so the app
+      still opens with no network. API calls (/api/*) are NEVER cached —
+      offline data comes from the app's own on-device snapshots, so the
+      worker can never serve stale business data as if it were live.
+   Bump APP_SHELL_CACHE when the caching strategy changes to drop old caches. */
 
-self.addEventListener("install", () => {
-  self.skipWaiting();
+const APP_SHELL_CACHE = "tcg-app-shell-v1";
+const APP_SHELL_FILES = [
+  "/",
+  "/index.html",
+  "/manifest.webmanifest",
+  "/icon-192.png",
+  "/icon-512.png",
+  "/apple-touch-icon.png",
+  "/favicon-32.png",
+];
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    (async () => {
+      const cache = await caches.open(APP_SHELL_CACHE);
+      // Settle individually: one missing file must not fail the whole install.
+      await Promise.allSettled(APP_SHELL_FILES.map((file) => cache.add(file)));
+      await self.skipWaiting();
+    })()
+  );
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(keys.filter((key) => key !== APP_SHELL_CACHE).map((key) => caches.delete(key)));
+      await self.clients.claim();
+    })()
+  );
+});
+
+self.addEventListener("fetch", (event) => {
+  const { request } = event;
+  if (request.method !== "GET") return;
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith("/api/")) return; // Network only — never cached.
+
+  // Page navigations: fresh when possible, cached shell when offline.
+  if (request.mode === "navigate") {
+    event.respondWith(
+      (async () => {
+        try {
+          const fresh = await fetch(request);
+          const cache = await caches.open(APP_SHELL_CACHE);
+          await cache.put("/index.html", fresh.clone());
+          return fresh;
+        } catch (error) {
+          const cache = await caches.open(APP_SHELL_CACHE);
+          const fallback = await cache.match("/index.html");
+          return fallback || Response.error();
+        }
+      })()
+    );
+    return;
+  }
+
+  // Build assets are content-hashed, so cache-first is safe for them.
+  if (url.pathname.startsWith("/assets/")) {
+    event.respondWith(
+      (async () => {
+        const cache = await caches.open(APP_SHELL_CACHE);
+        const cached = await cache.match(request);
+        if (cached) return cached;
+        const fresh = await fetch(request);
+        if (fresh.ok) await cache.put(request, fresh.clone());
+        return fresh;
+      })()
+    );
+    return;
+  }
+
+  // Other static files (icons, product images): network-first so updated
+  // images win, with the cache as the offline fallback.
+  if (/\.(?:png|jpg|jpeg|svg|webp|ico|webmanifest|css|js|woff2?)$/.test(url.pathname)) {
+    event.respondWith(
+      (async () => {
+        const cache = await caches.open(APP_SHELL_CACHE);
+        try {
+          const fresh = await fetch(request);
+          if (fresh.ok) await cache.put(request, fresh.clone());
+          return fresh;
+        } catch (error) {
+          const cached = await cache.match(request);
+          return cached || Response.error();
+        }
+      })()
+    );
+  }
 });
 
 self.addEventListener("push", (event) => {
