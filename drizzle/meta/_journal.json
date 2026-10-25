@@ -323,6 +323,13 @@
       "when": 1791002961236,
       "tag": "0045_remember_login",
       "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "5",
+      "when": 1792897166321,
+      "tag": "0046_push_notifications",
+      "breakpoints": true
     }
   ]
 }

@@ -12,6 +12,16 @@ import "./index.css";
 
 initializeRgbEffects();
 
+// Web Push: the service worker only delivers notifications (no offline
+// caching). Registration is best-effort — the app works fully without it.
+if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {
+      /* push notifications stay unavailable; nothing else depends on it */
+    });
+  });
+}
+
 const analyticsEndpoint = import.meta.env.VITE_ANALYTICS_ENDPOINT;
 const analyticsWebsiteId = import.meta.env.VITE_ANALYTICS_WEBSITE_ID;
 if (typeof window !== "undefined" && analyticsEndpoint && analyticsWebsiteId && !analyticsEndpoint.startsWith("%")) {

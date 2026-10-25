@@ -31,6 +31,8 @@ import { createMonthlyReport } from "@shared/monthlyReport";
 import { createManualStoredBackup, getAutoBackupSettings, listBackupArchives, listBackupRestoreHistory, AUTO_BACKUP_CRON, saveAutoBackupSettings, type AutoBackupFrequency } from "./backupScheduler";
 import { getReportBranding, saveReportBranding, uploadReportLogo } from "./reportBranding";
 import * as snkrShopDb from "./snkrShopDb";
+import { deletePushSubscriptionByEndpoint, getOrCreateVapidKeys, upsertPushSubscription } from "./pushDb";
+import { sendPushToUser } from "./push";
 
 const chyusenEntryBase = z.object({
   title: z.string().trim().min(1).max(255),
@@ -939,6 +941,38 @@ export const appRouter = router({
     update: protectedProcedure.input(z.object({ id: z.number(), name: z.string().trim().min(1).max(120) })).mutation(({ ctx, input }) => db.updateSaleLocation(ctx.user.id, input.id, input.name)),
     delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(({ ctx, input }) => db.deleteSaleLocation(ctx.user.id, input.id)),
     setPinned: protectedProcedure.input(z.object({ id: z.number().int().positive(), isPinned: z.boolean() })).mutation(({ ctx, input }) => db.setSaleLocationPinned(ctx.user.id, input.id, input.isPinned)),
+  }),
+
+  push: router({
+    getPublicKey: protectedProcedure.query(async () => {
+      const keys = await getOrCreateVapidKeys();
+      return { publicKey: keys.publicKey };
+    }),
+    subscribe: protectedProcedure
+      .input(z.object({
+        endpoint: z.string().url().max(2048),
+        keys: z.object({
+          p256dh: z.string().min(16).max(255),
+          auth: z.string().min(8).max(255),
+        }),
+        userAgent: z.string().max(500).optional(),
+      }))
+      .mutation(({ ctx, input }) => upsertPushSubscription(ctx.user.id, input.endpoint, input.keys.p256dh, input.keys.auth, input.userAgent)),
+    unsubscribe: protectedProcedure
+      .input(z.object({ endpoint: z.string().max(2048) }))
+      .mutation(({ ctx, input }) => deletePushSubscriptionByEndpoint(ctx.user.id, input.endpoint)),
+    sendTest: protectedProcedure.mutation(async ({ ctx }) => {
+      const summary = await sendPushToUser(ctx.user.id, {
+        title: "TCG Manager",
+        body: "Thông báo thử — thiết bị này đã bật thông báo đẩy thành công.",
+        url: "/cai-dat",
+        tag: "push-test",
+      });
+      if (summary.attempted === 0) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Thiết bị này chưa đăng ký nhận thông báo đẩy." });
+      }
+      return summary;
+    }),
   }),
 });
 

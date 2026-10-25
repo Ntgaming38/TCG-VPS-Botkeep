@@ -12,6 +12,9 @@ export const ENV = {
   adminPassword: process.env.ADMIN_PASSWORD ?? "",
   adminOpenId: process.env.ADMIN_OPENID ?? "local-admin",
   cronSecret: process.env.CRON_SECRET ?? "",
+  // Web Push VAPID "sub" claim: a contact for push services. The VAPID
+  // keypair itself is generated and stored by the app (see pushDb).
+  vapidSubject: process.env.VAPID_SUBJECT ?? "mailto:admin@tcg-manager.local",
   storageDir: process.env.STORAGE_DIR ?? "./dist/public/uploads",
   googleClientId: process.env.GOOGLE_CLIENT_ID ?? "",
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",

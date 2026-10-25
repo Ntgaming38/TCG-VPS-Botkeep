@@ -20,6 +20,7 @@ import { DEFAULT_CARD_PRODUCT_IMAGE_ZOOM, DEFAULT_BOX_PACK_PRODUCT_IMAGE_ZOOM, P
 import { getDataBackupFileName, rowsToCsv, type DataBackupScope } from "@shared/dataBackupExport";
 import { dataBackupRestoreSchema, getDataBackupRestorePreview, type DataBackupRestorePayload } from "@shared/dataBackupRestore";
 import { getSensitiveActivityLabel } from "@shared/sensitiveActivityLog";
+import PushNotificationSettings from "@/components/PushNotificationSettings";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 
@@ -28,7 +29,7 @@ const BATCH_SIZES = [6, 12, 18, 20] as const;
 const TRASH_RETENTION_DAYS = [7, 14, 30, 60, 90, 180] as const;
 type SourceDraft = { label: string; sourceUrl: string; checkIntervalMinutes: string; isActive: boolean };
 type SourceFilter = "all" | "errors";
-type SettingsSection = "rgb" | "currency" | "productImages" | "saleLocations" | "backup" | "activity" | "chyusen" | "sources" | "marketplace" | "trash" | "background" | "backgroundDaily" | "backgroundHistory";
+type SettingsSection = "rgb" | "currency" | "productImages" | "saleLocations" | "backup" | "activity" | "chyusen" | "sources" | "marketplace" | "trash" | "background" | "backgroundDaily" | "backgroundHistory" | "pushNotifications";
 
 function statusStyle(status?: string | null) {
   if (status === "unavailable") return "border-red-200 bg-red-50 text-red-700";
@@ -74,7 +75,7 @@ export default function Settings() {
   const [restoreMode, setRestoreMode] = useState<"merge" | "overwrite">("merge");
   const [reportMonth, setReportMonth] = useState(() => new Date().toISOString().slice(0, 7));
   const [reportAccentColor, setReportAccentColor] = useState("#DC2626");
-  const [collapsedSettingsSections, setCollapsedSettingsSections] = useState<Record<SettingsSection, boolean>>({ rgb: true, currency: true, productImages: true, saleLocations: true, backup: false, activity: true, chyusen: true, sources: true, marketplace: true, trash: true, background: true, backgroundDaily: true, backgroundHistory: true });
+  const [collapsedSettingsSections, setCollapsedSettingsSections] = useState<Record<SettingsSection, boolean>>({ rgb: true, currency: true, productImages: true, saleLocations: true, backup: false, activity: true, chyusen: true, sources: true, marketplace: true, trash: true, background: true, backgroundDaily: true, backgroundHistory: true, pushNotifications: true });
 
   const updateSettings = trpc.chyusen.updateNotificationSettings.useMutation({ onSuccess: () => { utils.chyusen.notificationSettings.invalidate(); toast.success("Đã cập nhật cài đặt nhắc hạn."); } });
   const updateSource = trpc.chyusen.updateSource.useMutation({ onSuccess: () => { utils.chyusen.sources.invalidate(); toast.success("Đã lưu thay đổi nguồn theo dõi."); } });
@@ -337,6 +338,11 @@ export default function Settings() {
 
   return <div className="settings-stack mx-auto max-w-5xl">
     <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-red-600">Workspace settings</p><h1 className="mt-1 text-3xl font-black tracking-tight">Cài đặt</h1><p className="mt-1 text-sm text-muted-foreground">Quản lý nhắc hạn, nguồn Chyusen và tự động đồng bộ giá ở một nơi.</p></div>
+
+    <Card className="settings-collapsible-panel" data-collapsed={collapsedSettingsSections.pushNotifications}>
+      <CardHeader data-settings-header onClick={(event) => toggleSettingsSection("pushNotifications", event)}><CardTitle className="flex items-center gap-2"><BellRing className="h-5 w-5 text-red-400" />Thông báo đẩy</CardTitle><CardDescription>Nhận thông báo ngay trên điện thoại khi có tin Chyusen mới hoặc giá Shop SNKR biến động trong các lượt đồng bộ tự động — kể cả khi app đang đóng. Mỗi thiết bị bật riêng một lần; trên iPhone cần mở app từ icon ngoài Màn hình chính (iOS 16.4 trở lên).</CardDescription></CardHeader>
+      <CardContent><PushNotificationSettings /></CardContent>
+    </Card>
 
     <Card className="settings-collapsible-panel" data-collapsed={collapsedSettingsSections.rgb}>
       <CardHeader data-settings-header onClick={(event) => toggleSettingsSection("rgb", event)}><CardTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-fuchsia-400" />Hiệu ứng RGB</CardTitle><CardDescription>Bật hoặc tắt hiệu ứng màu chạy ngang cho logo TCG Manager và tiêu đề chính. Lựa chọn được lưu riêng trên thiết bị này.</CardDescription></CardHeader>
