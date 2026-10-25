@@ -26,6 +26,7 @@ import ActivityHistory from "./pages/ActivityHistory";
 import Trash from "./pages/Trash";
 import DashboardLayout from "./components/DashboardLayout";
 import SupportFloatingButton from "./components/SupportFloatingButton";
+import ConnectivityBanner from "./components/ConnectivityBanner";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   return (
@@ -108,6 +109,7 @@ function App() {
       <ThemeProvider defaultTheme="dark" switchable>
         <TooltipProvider>
           <Toaster position="bottom-right" richColors />
+          <ConnectivityBanner />
           <Router />
           <SupportFloatingButton />
         </TooltipProvider>

@@ -18,6 +18,9 @@ import { filterSalesByDateRange, summarizeSales } from "@shared/salesDateFilter"
 import { getQuickSaleDateRange, type SaleQuickPeriod } from "@shared/salesQuickDateRange";
 import { getSaleLocationSelectValue, resolveSaleLocationSelection } from "@shared/saleLocation";
 import SalesReceipt from "@/components/SalesReceipt";
+import OfflineSaleDrafts from "@/components/OfflineSaleDrafts";
+import { useOfflineInStock, useOnlineStatus } from "@/lib/useOfflineData";
+import { addOfflineSaleDraft } from "@/lib/offlineSaleDrafts";
 
 const PLATFORMS = [
   { value: "user", label: "Người Dùng" },
@@ -56,7 +59,9 @@ export default function Sales() {
 
   const utils = trpc.useUtils();
   const { data: sales, refetch } = trpc.sales.list.useQuery({ search: search || undefined });
-  const { data: inventoryProducts } = trpc.products.inStock.useQuery();
+  const { data: inventoryProducts } = useOfflineInStock();
+  const online = useOnlineStatus();
+  const [draftsRefreshKey, setDraftsRefreshKey] = useState(0);
   const { data: saleLocations = [] } = trpc.saleLocations.list.useQuery();
   const { data: recentSaleLocations = [] } = trpc.saleLocations.recent.useQuery();
 
@@ -81,6 +86,21 @@ export default function Sales() {
     },
     onError: (err) => toast.error(err.message),
   });
+
+  // Offline: thay vì mất giao dịch, lưu nguyên payload vào bản nháp trên
+  // thiết bị để đồng bộ sau (panel "Bản nháp bán offline" ở đầu trang).
+  const submitNewSale = () => {
+    if (!online) {
+      const product = (inventoryProducts ?? []).find((p: any) => p.id === newSale.productId);
+      addOfflineSaleDraft({ ...newSale }, product?.name ?? `Sản phẩm #${newSale.productId}`);
+      toast.success("Đang offline — đã lưu giao dịch vào Bản nháp bán offline. Đồng bộ khi có mạng lại ở đầu trang Bán Hàng.");
+      setShowAddDialog(false);
+      setNewSale({ productId: 0, quantity: 1, salePrice: 0, platform: "user", saleLocation: null, fee: 0, shippingFee: 0, otherCost: 0, note: "", isDamaged: false });
+      setDraftsRefreshKey((value) => value + 1);
+      return;
+    }
+    createSale.mutate(newSale);
+  };
 
   const saveSaleLocation = trpc.saleLocations.create.useMutation({
     onSuccess: (_result, variables) => {
@@ -345,16 +365,18 @@ export default function Sales() {
               </div>
               <Button
                 className="w-full"
-                onClick={() => createSale.mutate(newSale)}
+                onClick={submitNewSale}
                 disabled={!newSale.productId || !newSale.salePrice || isAddingSaleLocation || createSale.isPending}
               >
-                {createSale.isPending ? "Đang lưu..." : "Lưu giao dịch bán"}
+                {createSale.isPending ? "Đang lưu..." : online ? "Lưu giao dịch bán" : "Lưu nháp (đang offline)"}
               </Button>
             </div>
           </DialogContent>
         </Dialog>
         <AlertDialog open={deleteSaleLocationId !== null} onOpenChange={(open) => !open && setDeleteSaleLocationId(null)}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Xóa nơi bán tự thêm?</AlertDialogTitle><AlertDialogDescription>Nơi bán sẽ bị bỏ khỏi gợi ý. Lịch sử giao dịch bán cũ không bị thay đổi.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Hủy</AlertDialogCancel><AlertDialogAction className="bg-red-600 hover:bg-red-700" disabled={deleteSavedSaleLocation.isPending} onClick={() => deleteSaleLocationId && deleteSavedSaleLocation.mutate({ id: deleteSaleLocationId })}>Xóa nơi bán</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
       </div>
+
+      <OfflineSaleDrafts refreshKey={draftsRefreshKey} />
 
       {/* Compact filters */}
       <div className="flex flex-col gap-3 rounded-xl border border-border bg-card/60 p-3 shadow-sm">

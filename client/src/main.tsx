@@ -12,8 +12,8 @@ import "./index.css";
 
 initializeRgbEffects();
 
-// Web Push: the service worker only delivers notifications (no offline
-// caching). Registration is best-effort — the app works fully without it.
+// Service worker: delivers Web Push notifications and caches the app shell
+// for offline use. Registration is best-effort — the app works without it.
 if (typeof window !== "undefined" && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js").catch(() => {

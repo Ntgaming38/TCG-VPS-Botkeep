@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
+import { useOfflineProductsList } from "@/lib/useOfflineData";
 import { RarityBadge } from "@/components/RarityBadge";
 import { getInventoryEmptyState, INVENTORY_HIDDEN_STATUS, isInventoryHiddenFilter } from "@shared/inventoryHiddenFilter";
 import { formatYen } from "@shared/formatYen";
@@ -40,12 +41,12 @@ export default function Inventory() {
     utils.sales.list.invalidate();
   };
 
-  const { data: products } = trpc.products.list.useQuery({
+  const { data: products, isOfflineSnapshot, savedAt: snapshotSavedAt } = useOfflineProductsList({
     type: typeFilter !== "all" ? typeFilter : undefined,
     status: statusFilter === "all" ? "all" : statusFilter,
     search: search || undefined,
   });
-  const { data: soldProducts } = trpc.products.list.useQuery({ status: INVENTORY_HIDDEN_STATUS });
+  const { data: soldProducts } = useOfflineProductsList({ status: INVENTORY_HIDDEN_STATUS });
 
   const markDamaged = trpc.products.markDamaged.useMutation({
     onSuccess: () => {
@@ -146,6 +147,17 @@ export default function Inventory() {
         <h1 className="text-2xl font-bold text-foreground">Kho Hàng</h1>
         <p className="text-muted-foreground text-sm mt-1">Quản lý tồn kho sản phẩm</p>
       </div>
+
+      {isOfflineSnapshot && (
+        <div className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+          <p>
+            Đang <b>offline</b> — bạn đang xem dữ liệu kho đã lưu trên thiết bị
+            {snapshotSavedAt ? <> lúc <b>{new Date(snapshotSavedAt).toLocaleString("vi-VN")}</b></> : null}.
+            Các thao tác sửa/xoá sản phẩm sẽ khả dụng trở lại khi có mạng.
+          </p>
+        </div>
+      )}
 
       {/* Summary */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
