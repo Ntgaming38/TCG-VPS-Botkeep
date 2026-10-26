@@ -170,7 +170,7 @@ export default function Login() {
         }
       `}</style>
 
-      <div className="absolute inset-0 bg-cover bg-center opacity-40" style={{ backgroundImage: "url('/login-bg.png')" }} />
+      <div className="absolute inset-0 bg-cover bg-center opacity-40" style={{ backgroundImage: "url('/login-bg.jpg')" }} />
       <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-[2px]" />
 
       {/* Luxury Blobs - khối màu chuyển động phía sau */}
