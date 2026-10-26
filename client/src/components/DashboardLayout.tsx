@@ -101,7 +101,7 @@ export default function DashboardLayout({
       <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950">
         <div className="absolute inset-0">
           <img
-            src="/login-bg.png"
+            src="/login-bg.jpg"
             alt="Pikachu và Lucario trên nền đăng nhập TCG Manager"
             className="login-background-image h-full w-full object-cover"
           />

@@ -1,4 +1,4 @@
-export const DEFAULT_LOGIN_BACKGROUND_URL = "/login-bg.png";
+export const DEFAULT_LOGIN_BACKGROUND_URL = "/login-bg.jpg";
 export const LEGACY_DEFAULT_LOGIN_BACKGROUND_URL = "/manus-storage/tcg-manager-login-background_ab4c32e6.png";
 export const LOGIN_BACKGROUND_STORAGE_KEY = "tcg-login-background-url";
 export const LOGIN_BACKGROUND_HISTORY_STORAGE_KEY = "tcg-login-background-history";
