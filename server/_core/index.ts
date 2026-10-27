@@ -13,6 +13,7 @@ import { ENV } from "./env";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { createResponseCompression } from "./responseCompression";
 import { storagePut } from "../storage";
 import { sdk } from "./sdk";
 import { runChyusenMonitor } from "../chyusenMonitor";
@@ -45,6 +46,9 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
+  // Compress responses (gzip) — the SPA bundle is ~3 MB of JS and the host
+  // connection is slow; this must wrap every route/static handler below.
+  app.use(createResponseCompression());
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
