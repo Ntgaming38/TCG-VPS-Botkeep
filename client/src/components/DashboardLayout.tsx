@@ -23,6 +23,7 @@ import { startLogin } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
 import {
   BarChart3, LogOut, PanelLeft, CreditCard, Box, Gift, Package, RefreshCw, UserRoundCog, Store,
+  ChevronDown, ChevronLeft, ChevronRight,
   Warehouse, ShoppingCart, DollarSign, TrendingUp, FileText, LayoutDashboard, Ticket, Settings, History, Trash2, ListChecks
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
@@ -270,54 +271,32 @@ function DashboardLayoutContent({
 
   return (
     <>
+      <div aria-hidden className="ambient-glow" />
       <div className="relative" ref={sidebarRef}>
-          <Sidebar collapsible="icon" className="border-r-0" disableTransition={isResizing}>
-          <SidebarHeader className="h-16 justify-center border-b border-primary/30">
-            <div className="flex items-center gap-3 px-2 transition-all w-full">
+          <Sidebar collapsible="icon" variant="floating" className="border-r-0" disableTransition={isResizing}>
+          <SidebarHeader className="h-16 justify-center border-b border-white/10">
+            <div className={`flex items-center gap-3 px-2 transition-all w-full ${isCollapsed ? "justify-center px-0" : ""}`}>
               <button
                 onClick={toggleSidebar}
-                className="h-8 w-8 flex items-center justify-center hover:bg-sidebar-accent rounded-lg transition-colors focus:outline-none shrink-0"
+                className="h-8 w-8 flex items-center justify-center hover:bg-sidebar-accent rounded-lg transition-colors focus:outline-none shrink-0 group-data-[collapsible=icon]:hidden"
                 aria-label="Toggle navigation"
               >
                 <PanelLeft className="h-4 w-4 text-primary" />
               </button>
-              {!isCollapsed && (
+              {!isCollapsed ? (
                 <span className="tcg-logo-text text-lg tracking-wider font-black">TCG Manager</span>
+              ) : (
+                <span className="tcg-logo-text text-base tracking-wider font-black">TCG</span>
               )}
             </div>
           </SidebarHeader>
 
-          <SidebarContent className="gap-0">
-            <SidebarMenu className="px-2 py-1">
-              {menuItems.map(item => {
-                const isActive = isMenuItemActive(location, item.path);
-                return (
-                  <SidebarMenuItem key={item.path}>
-                    <SidebarMenuButton
-                      isActive={isActive}
-                      onClick={() => setLocation(item.path)}
-                      tooltip={item.label}
-                      className={`h-10 transition-all font-normal ${isActive ? "neon-active-item" : "hover:text-primary"}`}
-                    >
-                      <item.icon className={`h-4 w-4 ${isActive ? "text-primary drop-shadow-[0_0_6px_rgba(74,222,128,0.8)]" : ""}`} />
-                      <span>{item.label}</span>
-                      {item.path === "/chyusen" && unreadChyusenCount > 0 && (
-                        <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-bold text-white group-data-[collapsible=icon]:hidden">
-                          {unreadChyusenCount > 99 ? "99+" : unreadChyusenCount}
-                        </span>
-                      )}
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarContent>
-
-          <SidebarFooter className="p-3 pt-4">
+          {/* Tài khoản — ngay dưới logo (bố cục A3): bấm mở Cài đặt tài khoản / Liên hệ hỗ trợ */}
+          <div className="border-b border-white/10 px-3 py-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex min-h-16 w-full items-center gap-3.5 rounded-xl px-2.5 py-2.5 text-left transition-colors hover:bg-sidebar-accent focus:outline-none group-data-[collapsible=icon]:justify-center">
-                  <Avatar className="h-11 w-11 shrink-0 border-2 bg-white" style={{ borderColor: user?.avatarBorderColor || undefined }}>
+                <button className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-2.5 py-1.5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] transition-colors hover:bg-white/10 focus:outline-none group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:border-transparent group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-1 group-data-[collapsible=icon]:shadow-none">
+                  <Avatar className="h-10 w-10 shrink-0 border-2 bg-white" style={{ borderColor: user?.avatarBorderColor || undefined }}>
                     <AvatarImage src={user?.avatarUrl || undefined} alt={user?.nickname || user?.name || "Người dùng"} className="object-cover" />
                     <AvatarFallback className="text-xs font-medium bg-primary/20 text-primary">
                       {(user?.nickname || user?.name)?.charAt(0).toUpperCase() || '?'}
@@ -327,6 +306,7 @@ function DashboardLayoutContent({
                     <p title={user?.nickname || user?.name || "-"} className="rgb-user-name truncate text-[15px] font-semibold leading-tight">{user?.nickname || user?.name || "-"}</p>
                     <p title={user?.email || "-"} className="text-xs text-muted-foreground truncate mt-1.5">{user?.email || "-"}</p>
                   </div>
+                  <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground group-data-[collapsible=icon]:hidden" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
@@ -338,18 +318,63 @@ function DashboardLayoutContent({
                   <Headphones className="mr-2 h-4 w-4" />
                   <span>Liên hệ hỗ trợ</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={logout} className="cursor-pointer text-destructive focus:text-destructive">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Đăng xuất</span>
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+          </div>
+
+          <SidebarContent className="gap-0">
+            <SidebarMenu className="px-2 py-1">
+              {menuItems.map(item => {
+                const isActive = isMenuItemActive(location, item.path);
+                return (
+                  <SidebarMenuItem key={item.path}>
+                    <SidebarMenuButton
+                      isActive={isActive}
+                      onClick={() => setLocation(item.path)}
+                      tooltip={item.label}
+                      className={`h-[38px] rounded-xl transition-all font-normal ${isActive ? "glass-active-item" : "hover:bg-white/5 hover:text-primary"}`}
+                    >
+                      <item.icon className={`h-4 w-4 ${isActive ? "text-primary drop-shadow-[0_0_6px_rgba(74,222,128,0.8)]" : ""}`} />
+                      <span>{item.label}</span>
+                      {item.path === "/chyusen" && unreadChyusenCount > 0 && (
+                        <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-bold text-white group-data-[collapsible=icon]:hidden">
+                          {unreadChyusenCount > 99 ? "99+" : unreadChyusenCount}
+                        </span>
+                      )}
+                    </SidebarMenuButton>
+                    {item.path === "/chyusen" && unreadChyusenCount > 0 && (
+                      <span className="absolute right-1 top-1 hidden h-2 w-2 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.9)] group-data-[collapsible=icon]:block" />
+                    )}
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarContent>
+
+          <SidebarFooter className="border-t border-white/10 p-3">
+            <button
+              onClick={logout}
+              aria-label="Đăng xuất"
+              className="flex h-11 w-full items-center gap-3 rounded-xl border border-red-500/25 bg-red-500/10 px-3 text-sm font-semibold text-red-300 transition-colors hover:bg-red-500/20 focus:outline-none group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+            >
+              <LogOut className="h-[18px] w-[18px] shrink-0" />
+              <span className="group-data-[collapsible=icon]:hidden">Đăng xuất</span>
+            </button>
             <AccountSettingsDialog open={accountSettingsOpen} onOpenChange={setAccountSettingsOpen} user={user} />
             <SupportDialog open={supportOpen} onOpenChange={setSupportOpen} />
           </SidebarFooter>
         </Sidebar>
+        <button
+          type="button"
+          onClick={toggleSidebar}
+          aria-label={isCollapsed ? "Mở rộng sidebar" : "Thu gọn sidebar"}
+          title={isCollapsed ? "Mở rộng sidebar" : "Thu gọn sidebar"}
+          className="absolute right-[-13px] top-[26px] z-50 hidden h-[29px] w-[29px] items-center justify-center rounded-full border border-white/25 bg-[#2a2c34]/80 text-white shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-md transition-colors hover:bg-[#2a2c34] focus:outline-none md:flex"
+        >
+          {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        </button>
         <div
-          className={`absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary/20 transition-colors ${isCollapsed ? "hidden" : ""}`}
+          className={`absolute top-0 right-1 w-1 h-full cursor-col-resize hover:bg-primary/20 transition-colors ${isCollapsed ? "hidden" : ""}`}
           onMouseDown={() => { if (!isCollapsed) setIsResizing(true); }}
           style={{ zIndex: 50 }}
         />
@@ -357,7 +382,8 @@ function DashboardLayoutContent({
 
       <SidebarInset>
         {isMobile && (pullDistance > 0 || isRefreshing) && <div className="fixed left-1/2 top-2 z-[60] flex -translate-x-1/2 items-center gap-2 rounded-full border border-primary/40 bg-background/95 px-3 py-1.5 text-xs font-medium text-primary shadow-lg backdrop-blur"><RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />{isRefreshing ? "Đang làm mới..." : pullDistance >= 72 ? "Thả để làm mới" : "Kéo xuống để làm mới"}</div>}
-        <div className="flex border-b border-primary/30 min-h-14 items-center justify-between bg-background/95 px-3 backdrop-blur sticky top-0 z-40 pt-[calc(env(safe-area-inset-top,0px)+10px)]">
+        <div className="sticky top-0 z-40 px-3 pt-[calc(env(safe-area-inset-top,0px)+10px)] md:px-5">
+          <div className="flex min-h-14 items-center justify-between rounded-2xl border border-white/10 bg-background/70 px-3 shadow-[0_12px_32px_rgba(0,0,0,0.32)] backdrop-blur-xl backdrop-saturate-150">
           <div className="flex items-center gap-2 sidebar-mobile-trigger left-0">
             <button
               type="button"
@@ -373,6 +399,7 @@ function DashboardLayoutContent({
           </div>
           <span className="sidebar-desktop-label text-sm font-medium text-muted-foreground">{activeMenuItem?.label ?? "TCG Manager"}</span>
           <NotificationCenter />
+          </div>
         </div>
         <main className="flex-1 p-4 md:p-6">{children}</main>
       </SidebarInset>
