@@ -21,6 +21,7 @@ import { runMarketplaceAutoSync } from "../marketplaceMonitor";
 import { runSnkrShopAutoSync } from "../snkrShopDb";
 import { runTrashAutoCleanup } from "../trashAutoCleanup";
 import { runScheduledAutoBackup } from "../backupScheduler";
+import { startInternalScheduler } from "../internalScheduler";
 import { runActivityLogCleanup } from "../activityLogCleanup";
 import { validateProductImageUpload } from "../uploadImage";
 
@@ -226,6 +227,10 @@ async function startServer() {
 
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
+    // Self-hosted deployments have no external cron calling the
+    // /api/scheduled/* endpoints, so the server schedules the automatic
+    // sync jobs itself (Marketplace, Shop SNKR, Chyusen monitor).
+    startInternalScheduler();
   });
 }
 
