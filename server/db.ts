@@ -228,6 +228,120 @@ export async function getProductByIdForUser(id: number, userId: number) {
   return result[0];
 }
 
+/**
+ * Writes the purchases-ledger row for a buy-in that arrived through the
+ * product form (Card/Box/Pack sections), mirroring createPurchase so the
+ * buy also appears in Mua hàng and in the purchase-based reports. Without
+ * this, product-form buys only existed as inventory and the purchase list,
+ * Reports totals and the dashboard purchase trend silently missed them.
+ */
+async function insertProductFormPurchaseRecord(
+  db: NonNullable<Awaited<ReturnType<typeof getDb>>>,
+  args: {
+    userId: number;
+    productId: number;
+    productName: string;
+    quantity: number;
+    unitPrice: number;
+    totalPrice: number;
+    note?: string | null;
+    purchaseDate?: Date;
+  },
+): Promise<number> {
+  const purchaseResult = await db.insert(purchases).values({
+    userId: args.userId,
+    productId: args.productId,
+    shop: null,
+    purchaseType: "mua_le",
+    quantity: args.quantity,
+    price: String(args.unitPrice),
+    totalPrice: String(args.totalPrice),
+    note: args.note ?? null,
+    status: "received",
+    ...(args.purchaseDate ? { purchaseDate: args.purchaseDate } : {}),
+  });
+  const purchaseId = purchaseResult[0].insertId;
+  await db.insert(activityLogs).values({
+    userId: args.userId,
+    action: "purchase_created",
+    description: `Mua ${args.quantity}x ${args.productName} - ¥${args.totalPrice.toLocaleString()}`,
+    entityType: "purchase",
+    entityId: purchaseId,
+    ...serializeActivityChange(null, {
+      productId: args.productId,
+      productName: args.productName,
+      quantity: args.quantity,
+      totalPrice: args.totalPrice,
+      shop: null,
+      note: args.note ?? null,
+    }),
+  });
+  return purchaseId;
+}
+
+/**
+ * Keeps the purchases ledger consistent after a product-form edit: the
+ * product row is one lot at one unit buy price, so every purchase row of
+ * the product is repriced to the edited unit price, and a quantity change
+ * is applied to the ledger (growth lands on the most recent buy; shrinkage
+ * consumes the most recent buys first). Products that predate the ledger
+ * (no purchase rows) gain one row for their full quantity, dated with the
+ * product itself.
+ */
+async function reconcileProductPurchaseLedger(
+  db: NonNullable<Awaited<ReturnType<typeof getDb>>>,
+  product: NonNullable<Awaited<ReturnType<typeof getProductById>>>,
+  change: { quantityDelta: number; newUnitPrice: number; newQuantity: number },
+): Promise<void> {
+  const rows = await db.select().from(purchases)
+    .where(and(eq(purchases.productId, product.id), eq(purchases.userId, product.userId)))
+    .orderBy(desc(purchases.purchaseDate), desc(purchases.id));
+
+  if (rows.length === 0) {
+    if (change.newQuantity > 0) {
+      await insertProductFormPurchaseRecord(db, {
+        userId: product.userId,
+        productId: product.id,
+        productName: product.name,
+        quantity: change.newQuantity,
+        unitPrice: change.newUnitPrice,
+        totalPrice: change.newQuantity * change.newUnitPrice,
+        note: product.description ?? null,
+        purchaseDate: product.createdAt,
+      });
+    }
+    return;
+  }
+
+  const repriceRow = async (row: (typeof rows)[number], quantity: number) => {
+    if (row.quantity === quantity && Number(row.price) === change.newUnitPrice) return;
+    await db.update(purchases).set({
+      quantity,
+      price: String(change.newUnitPrice),
+      totalPrice: String(quantity * change.newUnitPrice),
+    }).where(eq(purchases.id, row.id));
+  };
+
+  let remaining = change.quantityDelta;
+  for (const row of rows) {
+    if (remaining > 0) {
+      // Growth lands entirely on the most recent buy.
+      await repriceRow(row, row.quantity + remaining);
+      remaining = 0;
+    } else if (remaining < 0) {
+      const consume = Math.min(row.quantity, -remaining);
+      remaining += consume;
+      if (consume >= row.quantity) {
+        await db.delete(purchases).where(eq(purchases.id, row.id));
+      } else {
+        await repriceRow(row, row.quantity - consume);
+      }
+    } else {
+      await repriceRow(row, row.quantity);
+    }
+  }
+}
+
 export async function createProduct(data: InsertProduct) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -258,7 +372,16 @@ export async function createProduct(data: InsertProduct) {
       entityId: matchingLot.id,
       ...serializeActivityChange(null, { ...data, name: normalizedName, buyPrice: String(unitPrice), totalBuyPrice, quantity, mergedIntoProductId: matchingLot.id }),
     });
-    return { id: matchingLot.id, merged: true };
+    const purchaseId = await insertProductFormPurchaseRecord(db, {
+      userId: data.userId,
+      productId: matchingLot.id,
+      productName: normalizedName,
+      quantity,
+      unitPrice,
+      totalPrice: totalBuyPrice,
+      note: data.description ?? null,
+    });
+    return { id: matchingLot.id, merged: true, purchaseId };
   }
 
   const result = await db.insert(products).values({ ...data, name: normalizedName, buyPrice: String(unitPrice) });
@@ -270,7 +393,16 @@ export async function createProduct(data: InsertProduct) {
     entityId: result[0].insertId,
     ...serializeActivityChange(null, { ...data, name: normalizedName, buyPrice: String(unitPrice), totalBuyPrice }),
   });
-  return { id: result[0].insertId, merged: false };
+  const purchaseId = await insertProductFormPurchaseRecord(db, {
+    userId: data.userId,
+    productId: result[0].insertId,
+    productName: normalizedName,
+    quantity,
+    unitPrice,
+    totalPrice: totalBuyPrice,
+    note: data.description ?? null,
+  });
+  return { id: result[0].insertId, merged: false, purchaseId };
 }
 
 export async function updateProduct(id: number, userId: number, data: Partial<InsertProduct>) {
@@ -314,6 +446,23 @@ export async function updateProduct(id: number, userId: number, data: Partial<In
       entityId: id,
       ...serializeActivityChange(product, { ...product, ...data }),
     });
+  }
+  // Keep the purchases ledger in step with quantity/buy-price edits, so a
+  // correction made here shows the same numbers in Mua hàng and Reports as
+  // one made through the purchase form. Other edits (name, image, market
+  // price…) do not touch the ledger.
+  if (data.quantity !== undefined || data.buyPrice !== undefined) {
+    const oldQuantity = Number(product.quantity ?? 0);
+    const oldUnitPrice = Number(product.buyPrice ?? 0);
+    const newQuantity = Number(data.quantity ?? product.quantity ?? 0);
+    const newUnitPrice = data.buyPrice !== undefined ? Number(data.buyPrice) : oldUnitPrice;
+    if (newQuantity !== oldQuantity || newUnitPrice !== oldUnitPrice) {
+      await reconcileProductPurchaseLedger(db, product, {
+        quantityDelta: newQuantity - oldQuantity,
+        newUnitPrice,
+        newQuantity,
+      });
+    }
   }
 }
 
