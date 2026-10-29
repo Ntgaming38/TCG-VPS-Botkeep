@@ -7,7 +7,7 @@
       worker can never serve stale business data as if it were live.
    Bump APP_SHELL_CACHE when the caching strategy changes to drop old caches. */
 
-const APP_SHELL_CACHE = "tcg-app-shell-v1";
+const APP_SHELL_CACHE = "tcg-app-shell-v2";
 const APP_SHELL_FILES = [
   "/",
   "/index.html",
@@ -46,20 +46,36 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith("/api/")) return; // Network only — never cached.
 
-  // Page navigations: fresh when possible, cached shell when offline.
+  // Page navigations: stale-while-revalidate. Serve the cached shell
+  // immediately so opening the installed app never waits on the network
+  // (the host can take seconds to answer), and refresh the cached copy in
+  // the background so the NEXT open gets the latest shell. This is safe
+  // because the shell only references content-hashed /assets (cache-first
+  // below), so a one-open-old shell can never mix with wrong assets. Only
+  // successful responses are cached — an error page from the host must
+  // never become the stored shell.
   if (request.mode === "navigate") {
+    const cachePromise = caches.open(APP_SHELL_CACHE);
+    const refresh = (async () => {
+      try {
+        const fresh = await fetch(request);
+        if (fresh.ok) {
+          const cache = await cachePromise;
+          await cache.put("/index.html", fresh.clone());
+        }
+        return fresh;
+      } catch (error) {
+        return null;
+      }
+    })();
+    event.waitUntil(refresh);
     event.respondWith(
       (async () => {
-        try {
-          const fresh = await fetch(request);
-          const cache = await caches.open(APP_SHELL_CACHE);
-          await cache.put("/index.html", fresh.clone());
-          return fresh;
-        } catch (error) {
-          const cache = await caches.open(APP_SHELL_CACHE);
-          const fallback = await cache.match("/index.html");
-          return fallback || Response.error();
-        }
+        const cache = await cachePromise;
+        const cached = await cache.match("/index.html");
+        if (cached) return cached;
+        const fresh = await refresh;
+        return fresh || Response.error();
       })()
     );
     return;

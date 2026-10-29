@@ -1,32 +1,48 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
+import { Suspense, lazy } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Welcome from "./pages/Welcome";
-import ChooseFranchise from "./pages/ChooseFranchise";
-import FranchiseIntro from "./pages/FranchiseIntro";
-import Dashboard from "./pages/Dashboard";
-import Products from "./pages/Products";
-import Purchases from "./pages/Purchases";
-import Sales from "./pages/Sales";
-import Inventory from "./pages/Inventory";
-import Marketplace from "./pages/Marketplace";
-import SnkrShop from "./pages/SnkrShop";
-import SnkrShopDetail from "./pages/SnkrShopDetail";
-import Reports from "./pages/Reports";
-import Chyusen from "./pages/Chyusen";
-import ChyusenHistory from "./pages/ChyusenHistory";
-import Notifications from "./pages/Notifications";
-import Settings from "./pages/Settings";
-import ActivityHistory from "./pages/ActivityHistory";
-import Trash from "./pages/Trash";
 import DashboardLayout from "./components/DashboardLayout";
 import SupportFloatingButton from "./components/SupportFloatingButton";
 import ConnectivityBanner from "./components/ConnectivityBanner";
+
+// Pages are lazy-loaded per route so opening the app only downloads the
+// shell plus the page being opened, not every page at once. Loaded chunks
+// are content-hashed /assets, which the service worker caches, so repeat
+// opens stay fast.
+const Welcome = lazy(() => import("./pages/Welcome"));
+const ChooseFranchise = lazy(() => import("./pages/ChooseFranchise"));
+const FranchiseIntro = lazy(() => import("./pages/FranchiseIntro"));
+const Login = lazy(() => import("./pages/Login"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Products = lazy(() => import("./pages/Products"));
+const Purchases = lazy(() => import("./pages/Purchases"));
+const Sales = lazy(() => import("./pages/Sales"));
+const Inventory = lazy(() => import("./pages/Inventory"));
+const Marketplace = lazy(() => import("./pages/Marketplace"));
+const SnkrShop = lazy(() => import("./pages/SnkrShop"));
+const SnkrShopDetail = lazy(() => import("./pages/SnkrShopDetail"));
+const Reports = lazy(() => import("./pages/Reports"));
+const Chyusen = lazy(() => import("./pages/Chyusen"));
+const ChyusenHistory = lazy(() => import("./pages/ChyusenHistory"));
+const Notifications = lazy(() => import("./pages/Notifications"));
+const Settings = lazy(() => import("./pages/Settings"));
+const ActivityHistory = lazy(() => import("./pages/ActivityHistory"));
+const Trash = lazy(() => import("./pages/Trash"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+function PageLoading() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-[#0b1220]">
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-white/15 border-t-sky-400" />
+        <p className="text-sm text-slate-400">Đang tải...</p>
+      </div>
+    </div>
+  );
+}
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   return (
@@ -38,6 +54,7 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 
 function Router() {
   return (
+    <Suspense fallback={<PageLoading />}>
     <Switch>
       <Route path={"/"} component={Welcome} />
       <Route path={"/welcome"} component={Welcome} />
@@ -100,6 +117,7 @@ function Router() {
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
+    </Suspense>
   );
 }
 
