@@ -107,8 +107,9 @@ export default function ChyusenHistory() {
       return matchesFilter && matchesSearch;
     });
     return matched.sort((a, b) => {
-      const left = new Date(a.entry.updatedAt ?? a.entry.createdAt).getTime();
-      const right = new Date(b.entry.updatedAt ?? b.entry.createdAt).getTime();
+      // Mặc định: ngày có kết quả gần nhất trước.
+      const left = new Date(a.entry.resultDate ?? a.entry.createdAt).getTime();
+      const right = new Date(b.entry.resultDate ?? b.entry.createdAt).getTime();
       if (right !== left) return right - left;
       return Number(b.entry.id) - Number(a.entry.id);
     });

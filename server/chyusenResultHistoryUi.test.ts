@@ -30,7 +30,7 @@ describe("Trang Lịch sử Chūsen", () => {
     expect(page).toContain('value: "cancelled"');
     // Tìm kiếm và sắp xếp mới nhất trước (theo thời điểm cập nhật, dự phòng createdAt).
     expect(page).toContain("placeholder=");
-    expect(page).toContain("new Date(a.entry.updatedAt ?? a.entry.createdAt).getTime()");
+    expect(page).toContain("new Date(a.entry.resultDate ?? a.entry.createdAt).getTime()");
     // Thống kê: tổng, trúng, trượt, hủy, tỷ lệ trúng.
     expect(page).toContain("Tổng lượt");
     expect(page).toContain("Đã trúng");

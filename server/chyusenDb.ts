@@ -247,7 +247,9 @@ export async function listChyusenEntries(userId: number) {
   if (!db) return [];
   const rows = await db.select().from(chyusenEntries)
     .where(and(eq(chyusenEntries.userId, userId), isNull(chyusenEntries.deletedAt)))
-    .orderBy(desc(chyusenEntries.updatedAt));
+    // Mặc định: ngày có kết quả gần nhất trước (lượt chưa có ngày kết quả
+    // xuống cuối), rồi đến ngày tạo gần nhất.
+    .orderBy(desc(chyusenEntries.resultDate), desc(chyusenEntries.createdAt), desc(chyusenEntries.id));
   return rows.map((entry) => ({
     ...entry,
     timeState: getChyusenTimeState(entry),
@@ -289,7 +291,8 @@ export async function listChyusenResultHistory(userId: number) {
   if (!db) return [];
   const rows = await db.select().from(chyusenEntries)
     .where(eq(chyusenEntries.userId, userId))
-    .orderBy(desc(chyusenEntries.updatedAt), desc(chyusenEntries.id));
+    // Mặc định: ngày có kết quả gần nhất trước.
+    .orderBy(desc(chyusenEntries.resultDate), desc(chyusenEntries.createdAt), desc(chyusenEntries.id));
   return rows.map((entry) => ({
     ...entry,
     timeState: getChyusenTimeState(entry),

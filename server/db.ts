@@ -6,6 +6,7 @@ import { ENV } from './_core/env';
 import { fetchSnkrdunkPrice, fetchSnkrdunkProductMetadata, isSnkrdunkGenericImageUrl, isValidSnkrdunkUrl } from './snkrdunk';
 import { whitenAndStoreImage, tryWhitenAndStore } from './imageWhiten';
 import { summarizeCardRarityQuantities } from '../shared/cardRarity';
+import { sortProductsByRecentPurchase } from '../shared/productRecentOrder';
 import { formatRemainingTime, getChyusenTimeState, getChyusenUrgency } from './chyusenUtils';
 import { resolveMarketplacePriceUpdate } from '../shared/marketplaceAutoSync';
 import { processMarketplaceAutoSyncBatch } from './marketplaceAutoSyncBatch';
@@ -186,6 +187,39 @@ export async function revokeAllUserSessions(userId: number) {
 
 // ========== PRODUCTS ==========
 
+type ProductRow = typeof products.$inferSelect;
+
+/**
+ * Gắn `latestPurchaseDate` (ngày mua gần nhất trong sổ Mua hàng, bỏ qua
+ * lượt đã hủy) cho từng sản phẩm và sắp xếp mặc định: ngày mua gần nhất
+ * trước. Sản phẩm chưa có dòng mua nào thì dùng ngày tạo sản phẩm.
+ * Đây là thứ tự mặc định của mọi danh sách sản phẩm trong app — sửa giá
+ * hay đồng bộ giá (updatedAt) không được làm xáo trộn thứ tự này.
+ */
+async function sortProductsByLatestPurchase<T extends ProductRow>(
+  db: NonNullable<Awaited<ReturnType<typeof getDb>>>,
+  userId: number,
+  rows: T[],
+): Promise<Array<T & { latestPurchaseDate: Date | null }>> {
+  if (rows.length === 0) return [];
+  const purchaseRows = await db
+    .select({ productId: purchases.productId, purchaseDate: purchases.purchaseDate })
+    .from(purchases)
+    .where(and(eq(purchases.userId, userId), ne(purchases.status, "cancelled")));
+  const latestByProduct = new Map<number, Date>();
+  for (const row of purchaseRows) {
+    const current = latestByProduct.get(row.productId);
+    if (!current || row.purchaseDate.getTime() > current.getTime()) {
+      latestByProduct.set(row.productId, row.purchaseDate);
+    }
+  }
+  const withDates = rows.map((row) => ({
+    ...row,
+    latestPurchaseDate: latestByProduct.get(row.id) ?? null,
+  }));
+  return sortProductsByRecentPurchase(withDates);
+}
+
 export async function listProducts(userId: number, opts?: { type?: string; status?: string; search?: string }) {
   const db = await getDb();
   if (!db) return [];
@@ -199,8 +233,9 @@ export async function listProducts(userId: number, opts?: { type?: string; statu
     conditions.push(ne(products.status, "sold"));
   }
   if (opts?.search) conditions.push(like(products.name, `%${opts.search}%`));
-  const rows = await db.select().from(products).where(and(...conditions)).orderBy(desc(products.updatedAt));
-  return opts?.status ? rows : rows.filter(shouldDisplayProductInCatalog);
+  const rows = await db.select().from(products).where(and(...conditions));
+  const sorted = await sortProductsByLatestPurchase(db, userId, rows);
+  return opts?.status ? sorted : sorted.filter(shouldDisplayProductInCatalog);
 }
 
 export async function getProductById(id: number) {
@@ -525,7 +560,8 @@ export async function getProductSuggestions(userId: number, search: string) {
 export async function getInStockProducts(userId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(products).where(and(eq(products.userId, userId), eq(products.status, "in_stock"))).orderBy(desc(products.updatedAt));
+  const rows = await db.select().from(products).where(and(eq(products.userId, userId), eq(products.status, "in_stock")));
+  return sortProductsByLatestPurchase(db, userId, rows);
 }
 
 export async function updateMarketPrice(id: number, userId: number, marketPrice: string) {
@@ -954,12 +990,12 @@ export async function markProductAsDamaged(userId: number, data: {
 export async function getDamagedProducts(userId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(products)
+  const rows = await db.select().from(products)
     .where(and(
       eq(products.userId, userId),
       sql`${products.damagedQuantity} > 0`
-    ))
-    .orderBy(desc(products.updatedAt));
+    ));
+  return sortProductsByLatestPurchase(db, userId, rows);
 }
 
 // ========== ACTIVITY LOGS ==========
