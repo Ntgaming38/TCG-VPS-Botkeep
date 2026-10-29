@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { RarityBadge } from "@/components/RarityBadge";
+import { DashboardSkeleton } from "@/components/PageSkeletons";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { formatYen } from "@shared/formatYen";
 
@@ -66,6 +67,8 @@ export default function Dashboard() {
   const chyusenNearestDeadline = stats?.chyusenNearestDeadline ?? null;
   const chyusenRegisterNow = stats?.chyusenRegisterNow ?? null;
   const chyusenReminders = stats?.chyusenReminders ?? [];
+
+  if (!stats) return <DashboardSkeleton />;
 
   return (
     <div className="space-y-6">

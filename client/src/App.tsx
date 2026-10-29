@@ -7,6 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import DashboardLayout from "./components/DashboardLayout";
 import SupportFloatingButton from "./components/SupportFloatingButton";
 import ConnectivityBanner from "./components/ConnectivityBanner";
+import { GenericPageSkeleton } from "./components/PageSkeletons";
 
 // Pages are lazy-loaded per route so opening the app only downloads the
 // shell plus the page being opened, not every page at once. Loaded chunks
@@ -34,14 +35,7 @@ const Trash = lazy(() => import("./pages/Trash"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function PageLoading() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-[#0b1220]">
-      <div className="flex flex-col items-center gap-3">
-        <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-white/15 border-t-sky-400" />
-        <p className="text-sm text-slate-400">Đang tải...</p>
-      </div>
-    </div>
-  );
+  return <GenericPageSkeleton />;
 }
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {

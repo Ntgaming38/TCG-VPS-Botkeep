@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { startLogin } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
+import MobileTabBar from "./MobileTabBar";
 import {
   BarChart3, LogOut, PanelLeft, CreditCard, Box, Gift, Package, RefreshCw, UserRoundCog, Store,
   ChevronDown, ChevronLeft, ChevronRight,
@@ -401,8 +402,9 @@ function DashboardLayoutContent({
           <NotificationCenter />
           </div>
         </div>
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        <main className="flex-1 px-4 pb-28 pt-4 md:p-6">{children}</main>
       </SidebarInset>
+      {isMobile && <MobileTabBar chyusenUnreadCount={unreadChyusenCount} />}
     </>
   );
 }

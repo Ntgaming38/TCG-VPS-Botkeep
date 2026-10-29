@@ -21,6 +21,7 @@ import { useProductImageZoom } from "@/hooks/useProductImageZoom";
 import { ProductImageAdjuster } from "@/components/ProductImageAdjuster";
 import { ProductImageEditControls } from "@/components/ProductImageEditControls";
 import { ProductTypeBadge } from "@/components/ProductTypeBadge";
+import { ProductListSkeleton } from "@/components/PageSkeletons";
 import { ProductNameSuggestions } from "@/components/ProductNameSuggestions";
 import { sortProductsByRecentPurchase } from "@shared/productRecentOrder";
 import { COOKIE_NAME } from "@shared/const";
@@ -564,7 +565,9 @@ export default function Products() {
       </div>
 
       {/* Products Grid */}
-      {!sortedProducts || sortedProducts.length === 0 ? (
+      {products === undefined ? (
+        <ProductListSkeleton />
+      ) : !sortedProducts || sortedProducts.length === 0 ? (
         <div className="text-center py-16">
           <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground/30" />
           <h3 className="text-lg font-medium text-muted-foreground">Chưa có sản phẩm nào</h3>

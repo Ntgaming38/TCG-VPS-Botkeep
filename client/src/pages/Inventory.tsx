@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { trpc } from "@/lib/trpc";
 import { useOfflineProductsList } from "@/lib/useOfflineData";
 import { RarityBadge } from "@/components/RarityBadge";
+import { ProductListSkeleton } from "@/components/PageSkeletons";
 import { getInventoryEmptyState, INVENTORY_HIDDEN_STATUS, isInventoryHiddenFilter } from "@shared/inventoryHiddenFilter";
 import { formatYen } from "@shared/formatYen";
 import { Search, Package, Warehouse, AlertTriangle, Pencil, Trash2, EyeOff } from "lucide-react";
@@ -236,7 +237,9 @@ export default function Inventory() {
       )}
 
       {/* Inventory Grid */}
-      {displayedProducts.length === 0 ? (
+      {!products ? (
+        <ProductListSkeleton />
+      ) : displayedProducts.length === 0 ? (
         <div className="text-center py-16">
           <Warehouse className="h-16 w-16 mx-auto mb-4 text-muted-foreground/30" />
           <h3 className="text-lg font-medium text-muted-foreground">{emptyState.title}</h3>
