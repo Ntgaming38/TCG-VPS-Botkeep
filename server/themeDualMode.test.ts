@@ -63,6 +63,13 @@ describe("Light glass theme in index.css", () => {
     expect(css).toContain("html.light .ambient-glow");
   });
 
+  it("covers the opacity variants and the dark 950 tint panels (contrast fix round 2)", () => {
+    expect(css).toContain("html.light .bg-red-950\\/70");
+    expect(css).toContain("html.light .bg-violet-950\\/40");
+    expect(css).toContain("html.light .text-violet-200\\/85");
+    expect(css).toContain("html.light .text-violet-200\\/70");
+  });
+
   it("deepens pale tint text on light surfaces but restores it inside .keep-dark", () => {
     expect(css).toContain("html.light .text-teal-300, html.light .text-teal-400 { color: #0D9488; }");
     expect(css).toContain("html.light .keep-dark .text-teal-300 { color: #5EEAD4; }");
