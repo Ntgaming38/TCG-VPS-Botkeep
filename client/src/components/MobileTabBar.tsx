@@ -25,7 +25,7 @@ export default function MobileTabBar({ chyusenUnreadCount = 0 }: { chyusenUnread
   return (
     <nav
       aria-label="Điều hướng nhanh"
-      className="fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+10px)] z-50 flex rounded-[22px] border border-white/10 bg-[#101726]/80 p-1.5 shadow-[0_12px_32px_rgba(0,0,0,0.45)] backdrop-blur-2xl md:hidden"
+      className="mobile-tabbar fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+10px)] z-50 flex rounded-[22px] border border-white/10 bg-[#101726]/80 p-1.5 shadow-[0_12px_32px_rgba(0,0,0,0.45)] backdrop-blur-2xl md:hidden"
     >
       {TAB_ITEMS.map((item) => {
         const active = isTabActive(location, item.path);
@@ -42,7 +42,7 @@ export default function MobileTabBar({ chyusenUnreadCount = 0 }: { chyusenUnread
             <span className="relative">
               <Icon className="h-[21px] w-[21px]" />
               {item.path === "/chyusen" && chyusenUnreadCount > 0 && (
-                <span className="absolute -right-2 -top-1 h-[7px] w-[7px] rounded-full bg-red-500 ring-2 ring-[#101726]" />
+                <span className="tab-dot absolute -right-2 -top-1 h-[7px] w-[7px] rounded-full bg-red-500 ring-2 ring-[#101726]" />
               )}
             </span>
             {item.label}

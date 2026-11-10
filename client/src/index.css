@@ -809,3 +809,156 @@
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.14);
   overflow: hidden;
 }
+
+/* ============================================================
+   NỀN SÁNG GLASS (html.light) — chế độ sáng/tối toàn app.
+   Mặc định mở app là Sáng (theo bản demo đã chốt 2026-11-10);
+   nút chuyển ở thanh trên cùng, lựa chọn nhớ bằng localStorage "theme".
+   Khối này KHÔNG đụng vào nền tối hiện tại: html.dark giữ nguyên
+   bộ token charcoal ở trên. Các ghi đè đặt ngoài @layer nên thắng
+   utility của Tailwind ở những chỗ class màu đang ghi cứng.
+   ============================================================ */
+
+html.light { color-scheme: light; }
+html.dark { color-scheme: dark; }
+
+/* --- Bộ token sáng (ghi đè token charcoal khi html có class light) --- */
+:root.light {
+  --background: oklch(0.945 0.014 252);
+  --foreground: oklch(0.235 0.035 257);
+  --card: oklch(1 0 0 / 0.72);
+  --card-foreground: oklch(0.235 0.035 257);
+  --popover: oklch(1 0 0 / 0.96);
+  --popover-foreground: oklch(0.235 0.035 257);
+  --secondary: oklch(0.925 0.016 252);
+  --secondary-foreground: oklch(0.30 0.03 257);
+  --muted: oklch(0.915 0.014 252);
+  --muted-foreground: oklch(0.47 0.028 257);
+  --accent: oklch(0.915 0.035 155);
+  --accent-foreground: oklch(0.235 0.035 257);
+  --border: oklch(0.30 0.04 257 / 0.14);
+  --input: oklch(0.32 0.04 257 / 0.16);
+  --sidebar: oklch(1 0 0 / 0.55);
+  --sidebar-foreground: oklch(0.32 0.03 257);
+  --sidebar-accent: oklch(0.90 0.05 230);
+  --sidebar-accent-foreground: oklch(0.36 0.09 240);
+  --sidebar-border: oklch(0.30 0.04 257 / 0.12);
+}
+
+/* Nền trang sáng: gradient rất nhạt để thẻ kính có chiều sâu */
+html.light body {
+  background-image: linear-gradient(155deg, #F4F8FD 0%, #E3ECF9 48%, #D9E6F7 100%);
+  background-attachment: fixed;
+}
+
+/* Quầng sáng ambient sau layout — bản sáng dùng tông pastel rõ hơn */
+html.light .ambient-glow {
+  background:
+    radial-gradient(720px 480px at 6% -6%, rgba(56, 132, 246, 0.28), transparent 62%),
+    radial-gradient(680px 520px at 16% 108%, rgba(139, 92, 246, 0.22), transparent 60%),
+    radial-gradient(760px 560px at 100% 100%, rgba(16, 185, 129, 0.14), transparent 60%);
+}
+
+/* --- Sidebar kính bản sáng --- */
+html.light [data-variant="floating"] [data-slot="sidebar-inner"] {
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.58) 55%, rgba(255, 255, 255, 0.66));
+  border-color: rgba(15, 35, 70, 0.10);
+  box-shadow: 0 24px 50px rgba(31, 54, 96, 0.20), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+html.light [data-mobile="true"][data-slot="sidebar"] {
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.78) 55%, rgba(255, 255, 255, 0.84));
+  border-color: rgba(15, 35, 70, 0.10);
+  box-shadow: 0 24px 50px rgba(31, 54, 96, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+html.light .glass-active-item {
+  background: linear-gradient(120deg, rgba(56, 189, 248, 0.22), rgba(167, 139, 250, 0.16));
+  border-color: rgba(2, 132, 199, 0.25);
+  box-shadow: 0 8px 22px rgba(31, 54, 96, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  color: #0B4A6E;
+}
+/* Trong sidebar, các class white/10, white/5 đang ghi cứng cho nền tối */
+html.light [data-slot="sidebar"] .border-white\/10 { border-color: rgba(15, 35, 70, 0.10); }
+html.light [data-slot="sidebar"] .bg-white\/5 { background-color: rgba(255, 255, 255, 0.45); }
+html.light [data-slot="sidebar"] .hover\:bg-white\/10:hover { background-color: rgba(255, 255, 255, 0.75); }
+html.light [data-slot="sidebar"] .hover\:bg-white\/5:hover { background-color: rgba(255, 255, 255, 0.55); }
+
+/* Logo: giữ nguyên gradient gốc, chỉ dịu lớp phát sáng cho nền sáng */
+html.light .tcg-logo-text {
+  filter: drop-shadow(0 1px 1.5px rgba(120, 72, 20, 0.35));
+}
+
+/* --- Thanh trên cùng + nút thu gọn sidebar + tab bar điện thoại --- */
+html.light .app-topbar {
+  border-color: rgba(15, 35, 70, 0.10);
+  box-shadow: 0 12px 32px rgba(31, 54, 96, 0.16);
+}
+html.light .sidebar-collapse-btn {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(15, 35, 70, 0.16);
+  color: #334155;
+  box-shadow: 0 8px 20px rgba(31, 54, 96, 0.25);
+}
+html.light .sidebar-collapse-btn:hover { background: #FFFFFF; }
+html.light .mobile-tabbar {
+  background: rgba(255, 255, 255, 0.80);
+  border-color: rgba(15, 35, 70, 0.10);
+  box-shadow: 0 18px 44px rgba(31, 54, 96, 0.28);
+}
+html.light .mobile-tabbar a { color: #64748B; }
+html.light .mobile-tabbar a:hover { color: #334155; }
+html.light .mobile-tabbar a[aria-current="page"] {
+  background: rgba(56, 189, 248, 0.18);
+  color: #0284C7;
+}
+html.light .mobile-tabbar .tab-dot { box-shadow: 0 0 0 2px #EAF1FA; }
+
+/* --- Chữ màu nhạt (vốn để đọc trên nền tối) -> đậm lại ở nền sáng ---
+   Áp cho các class text-{màu}-100/200/300/400 và slate-200/300.
+   Vùng nào CỐ TÌNH giữ nền tối (ảnh bìa, banner) thì bọc class
+   .keep-dark — các dòng .keep-dark bên dưới khôi phục màu gốc. */
+html.light .text-red-100, html.light .text-red-200 { color: #B91C1C; }
+html.light .text-red-300, html.light .text-red-400 { color: #DC2626; }
+html.light .text-orange-100, html.light .text-orange-200 { color: #C2410C; }
+html.light .text-orange-300, html.light .text-orange-400 { color: #EA580C; }
+html.light .text-amber-100, html.light .text-amber-200 { color: #B45309; }
+html.light .text-amber-300, html.light .text-amber-400 { color: #D97706; }
+html.light .text-yellow-100, html.light .text-yellow-200 { color: #A16207; }
+html.light .text-yellow-300, html.light .text-yellow-400 { color: #CA8A04; }
+html.light .text-lime-100, html.light .text-lime-200 { color: #4D7C0F; }
+html.light .text-lime-300, html.light .text-lime-400 { color: #65A30D; }
+html.light .text-green-100, html.light .text-green-200 { color: #15803D; }
+html.light .text-green-300, html.light .text-green-400 { color: #16A34A; }
+html.light .text-emerald-100, html.light .text-emerald-200 { color: #047857; }
+html.light .text-emerald-300, html.light .text-emerald-400 { color: #059669; }
+html.light .text-teal-100, html.light .text-teal-200 { color: #0F766A; }
+html.light .text-teal-300, html.light .text-teal-400 { color: #0D9488; }
+html.light .text-cyan-100, html.light .text-cyan-200 { color: #0E7490; }
+html.light .text-cyan-300, html.light .text-cyan-400 { color: #0891B2; }
+html.light .text-sky-100, html.light .text-sky-200 { color: #0369A1; }
+html.light .text-sky-300, html.light .text-sky-400 { color: #0284C7; }
+html.light .text-blue-100, html.light .text-blue-200 { color: #1D4ED8; }
+html.light .text-blue-300, html.light .text-blue-400 { color: #2563EB; }
+html.light .text-indigo-100, html.light .text-indigo-200 { color: #4338CA; }
+html.light .text-indigo-300, html.light .text-indigo-400 { color: #4F46E5; }
+html.light .text-violet-100, html.light .text-violet-200 { color: #6D28D9; }
+html.light .text-violet-300, html.light .text-violet-400 { color: #7C3AED; }
+html.light .text-purple-100, html.light .text-purple-200 { color: #7E22CE; }
+html.light .text-purple-300, html.light .text-purple-400 { color: #9333EA; }
+html.light .text-pink-100, html.light .text-pink-200 { color: #BE185D; }
+html.light .text-pink-300, html.light .text-pink-400 { color: #DB2777; }
+html.light .text-rose-100, html.light .text-rose-200 { color: #BE123C; }
+html.light .text-rose-300, html.light .text-rose-400 { color: #E11D48; }
+html.light .text-slate-200 { color: #475569; }
+html.light .text-slate-300 { color: #64748B; }
+
+/* Vùng giữ nền tối có chủ đích: khôi phục màu chữ nhạt gốc */
+html.light .keep-dark .text-slate-200 { color: #E2E8F0; }
+html.light .keep-dark .text-slate-300 { color: #CBD5E1; }
+html.light .keep-dark .text-teal-100 { color: #CCFBF1; }
+html.light .keep-dark .text-teal-200 { color: #99F6E4; }
+html.light .keep-dark .text-teal-300 { color: #5EEAD4; }
+html.light .keep-dark .text-blue-400 { color: #60A5FA; }
+html.light .keep-dark .text-emerald-400 { color: #34D399; }
+html.light .keep-dark .text-red-400 { color: #F87171; }
+html.light .keep-dark .text-sky-400 { color: #38BDF8; }
+html.light .keep-dark .text-green-400 { color: #4ADE80; }

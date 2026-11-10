@@ -44,7 +44,7 @@ export default function Welcome() {
   };
 
   return (
-    <div className="min-h-[100dvh] relative overflow-hidden bg-[#070707] font-sans text-white flex flex-col justify-center items-center p-3 sm:p-6 selection:bg-yellow-400 selection:text-slate-950 pt-[env(safe-area-inset-top,12px)] pb-[env(safe-area-inset-bottom,12px)]">
+    <div className="keep-dark min-h-[100dvh] relative overflow-hidden bg-[#070707] font-sans text-white flex flex-col justify-center items-center p-3 sm:p-6 selection:bg-yellow-400 selection:text-slate-950 pt-[env(safe-area-inset-top,12px)] pb-[env(safe-area-inset-bottom,12px)]">
       {/* Nhúng Font Gaming Orbitron & CSS Keyframes cho hiệu ứng RGB Animation đa sắc màu */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&display=swap');

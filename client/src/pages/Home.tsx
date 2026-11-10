@@ -36,7 +36,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="keep-dark min-h-screen relative overflow-hidden">
       {/* Full background image - artwork supplied by the user */}
       <div className="absolute inset-0">
         <img

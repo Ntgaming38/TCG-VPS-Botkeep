@@ -141,7 +141,7 @@ export default function Login() {
   }[screen];
 
   return (
-    <div className="relative min-h-[100dvh] flex items-center justify-center px-4 bg-slate-950 overflow-hidden font-sans pt-[env(safe-area-inset-top,12px)] pb-[env(safe-area-inset-bottom,12px)]">
+    <div className="keep-dark relative min-h-[100dvh] flex items-center justify-center px-4 bg-slate-950 overflow-hidden font-sans pt-[env(safe-area-inset-top,12px)] pb-[env(safe-area-inset-bottom,12px)]">
       {/* CSS Keyframes cho hiệu ứng RGB Animation sống động */}
       <style>{`
         @keyframes rgb-flow {
