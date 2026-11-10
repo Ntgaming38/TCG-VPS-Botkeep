@@ -41,6 +41,8 @@ import { NotificationCenter } from "./NotificationCenter";
 import { AccountSettingsDialog } from "./AccountSettingsDialog";
 import { SupportDialog } from "./SupportDialog";
 import { Headphones } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "TCG Manager", path: "/thong-ke" },
@@ -147,6 +149,7 @@ function DashboardLayoutContent({
   setSidebarWidth: (width: number) => void;
 }) {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [location, setLocation] = useLocation();
   const { state, toggleSidebar, openMobile, setOpenMobile } = useSidebar();
   const isCollapsed = state === "collapsed";
@@ -370,7 +373,7 @@ function DashboardLayoutContent({
           onClick={toggleSidebar}
           aria-label={isCollapsed ? "Mở rộng sidebar" : "Thu gọn sidebar"}
           title={isCollapsed ? "Mở rộng sidebar" : "Thu gọn sidebar"}
-          className="absolute right-[-13px] top-[26px] z-50 hidden h-[29px] w-[29px] items-center justify-center rounded-full border border-white/25 bg-[#2a2c34]/80 text-white shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-md transition-colors hover:bg-[#2a2c34] focus:outline-none md:flex"
+          className="absolute right-[-13px] top-[26px] z-50 hidden h-[29px] w-[29px] sidebar-collapse-btn items-center justify-center rounded-full border border-white/25 bg-[#2a2c34]/80 text-white shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-md transition-colors hover:bg-[#2a2c34] focus:outline-none md:flex"
         >
           {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </button>
@@ -384,7 +387,7 @@ function DashboardLayoutContent({
       <SidebarInset>
         {isMobile && (pullDistance > 0 || isRefreshing) && <div className="fixed left-1/2 top-2 z-[60] flex -translate-x-1/2 items-center gap-2 rounded-full border border-primary/40 bg-background/95 px-3 py-1.5 text-xs font-medium text-primary shadow-lg backdrop-blur"><RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />{isRefreshing ? "Đang làm mới..." : pullDistance >= 72 ? "Thả để làm mới" : "Kéo xuống để làm mới"}</div>}
         <div className="sticky top-0 z-40 px-3 pt-[calc(env(safe-area-inset-top,0px)+10px)] md:px-5">
-          <div className="flex min-h-14 items-center justify-between rounded-2xl border border-white/10 bg-background/70 px-3 shadow-[0_12px_32px_rgba(0,0,0,0.32)] backdrop-blur-xl backdrop-saturate-150">
+          <div className="flex min-h-14 items-center justify-between app-topbar rounded-2xl border border-white/10 bg-background/70 px-3 shadow-[0_12px_32px_rgba(0,0,0,0.32)] backdrop-blur-xl backdrop-saturate-150">
           <div className="flex items-center gap-2 sidebar-mobile-trigger left-0">
             <button
               type="button"
@@ -399,7 +402,18 @@ function DashboardLayoutContent({
             </span>
           </div>
           <span className="sidebar-desktop-label text-sm font-medium text-muted-foreground">{activeMenuItem?.label ?? "TCG Manager"}</span>
-          <NotificationCenter />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={theme === "dark" ? "Chuyển sang nền sáng" : "Chuyển sang nền tối"}
+              title={theme === "dark" ? "Chuyển sang nền sáng" : "Chuyển sang nền tối"}
+              className="flex h-12 w-12 min-h-12 min-w-12 items-center justify-center rounded-xl bg-sidebar-accent/15 shadow-sm transition-colors hover:bg-sidebar-accent/25"
+            >
+              {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
+            <NotificationCenter />
+          </div>
           </div>
         </div>
         <main className="flex-1 px-4 pb-28 pt-4 md:p-6">{children}</main>

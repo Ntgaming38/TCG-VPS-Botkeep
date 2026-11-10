@@ -148,7 +148,7 @@ export default function SnkrShop() {
 
   return (
     <div className="space-y-6 pb-8">
-      <section className="relative overflow-hidden rounded-2xl border border-teal-500/30 bg-[radial-gradient(circle_at_top_right,rgba(20,184,166,0.22),transparent_45%),linear-gradient(135deg,rgba(15,23,42,0.94),rgba(20,83,45,0.36))] p-5 shadow-sm md:p-6">
+      <section className="keep-dark relative overflow-hidden rounded-2xl border border-teal-500/30 bg-[radial-gradient(circle_at_top_right,rgba(20,184,166,0.22),transparent_45%),linear-gradient(135deg,rgba(15,23,42,0.94),rgba(20,83,45,0.36))] p-5 shadow-sm md:p-6">
         <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-2xl">
             <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-teal-300"><ShieldCheck className="h-4 w-4" />Theo dõi độc lập</div>

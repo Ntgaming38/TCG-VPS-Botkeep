@@ -40,7 +40,7 @@ export default function FranchiseIntro() {
   const info = INFO[franchise] ?? INFO.pokemon;
 
   return (
-    <div className="min-h-[100dvh] relative overflow-hidden bg-[#070707] font-sans text-white flex flex-col justify-center items-center p-3 sm:p-6 pt-[env(safe-area-inset-top,12px)] pb-[env(safe-area-inset-bottom,12px)]">
+    <div className="keep-dark min-h-[100dvh] relative overflow-hidden bg-[#070707] font-sans text-white flex flex-col justify-center items-center p-3 sm:p-6 pt-[env(safe-area-inset-top,12px)] pb-[env(safe-area-inset-bottom,12px)]">
       {/* CSS Keyframes cho hiệu ứng RGB Animation sống động */}
       <style>{`
         @keyframes rgb-flow {

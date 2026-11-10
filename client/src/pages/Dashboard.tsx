@@ -4,6 +4,7 @@ import { TrendingUp, TrendingDown, Minus, Package, ShoppingCart, DollarSign, Bar
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
+import { useTheme } from "@/contexts/ThemeContext";
 import { RarityBadge } from "@/components/RarityBadge";
 import { DashboardSkeleton } from "@/components/PageSkeletons";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -62,6 +63,17 @@ export default function Dashboard() {
   const soldJunkPacks = stats?.soldJunkPacks ?? 0;
   const recentActivities = stats?.recentActivities ?? [];
   const chartData = stats?.chartData ?? monthlyData;
+  const { theme } = useTheme();
+  const chartDark = theme === "dark";
+  const chartGridStroke = chartDark ? "rgba(255,255,255,0.05)" : "rgba(15,35,70,0.08)";
+  const chartAxisStroke = chartDark ? "rgba(255,255,255,0.3)" : "rgba(15,35,70,0.45)";
+  const chartTooltipStyle = {
+    backgroundColor: chartDark ? "#1a1a3e" : "#FFFFFF",
+    border: chartDark ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(15,35,70,0.12)",
+    borderRadius: "8px",
+    color: chartDark ? "#E8EEF9" : "#10233B",
+  } as const;
+  const chartLabelStyle = { color: chartDark ? "#fff" : "#10233B" } as const;
   const cardRarityStats = stats?.cardRarityStats ?? [];
   const chyusen = stats?.chyusen ?? { open: 0, expiring: 0, deadlineToday: false, deadlineTomorrow: false, waitingResult: 0, won: 0, lost: 0 };
   const chyusenNearestDeadline = stats?.chyusenNearestDeadline ?? null;
@@ -224,14 +236,14 @@ export default function Dashboard() {
             <div className="h-[250px]">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                  <XAxis dataKey="month" stroke="rgba(255,255,255,0.3)" fontSize={12} />
-                  <YAxis stroke="rgba(255,255,255,0.3)" fontSize={12} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartGridStroke} />
+                  <XAxis dataKey="month" stroke={chartAxisStroke} fontSize={12} />
+                  <YAxis stroke={chartAxisStroke} fontSize={12} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#1a1a3e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
-                    labelStyle={{ color: '#fff' }}
+                    contentStyle={chartTooltipStyle}
+                    labelStyle={chartLabelStyle}
                   />
-                  <Area type="monotone" dataKey="revenue" stroke="#FFCB05" fill="#FFCB05" fillOpacity={0.1} strokeWidth={2} />
+                  <Area type="monotone" dataKey="revenue" stroke={chartDark ? "#FFCB05" : "#D9A404"} fill={chartDark ? "#FFCB05" : "#D9A404"} fillOpacity={0.1} strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -246,14 +258,14 @@ export default function Dashboard() {
             <div className="h-[250px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                  <XAxis dataKey="month" stroke="rgba(255,255,255,0.3)" fontSize={12} />
-                  <YAxis stroke="rgba(255,255,255,0.3)" fontSize={12} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartGridStroke} />
+                  <XAxis dataKey="month" stroke={chartAxisStroke} fontSize={12} />
+                  <YAxis stroke={chartAxisStroke} fontSize={12} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#1a1a3e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
-                    labelStyle={{ color: '#fff' }}
+                    contentStyle={chartTooltipStyle}
+                    labelStyle={chartLabelStyle}
                   />
-                  <Bar dataKey="profit" fill="#4ade80" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="profit" fill={chartDark ? "#4ade80" : "#22c55e"} radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

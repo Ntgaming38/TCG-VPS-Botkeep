@@ -15,7 +15,7 @@ export default function ChooseFranchise() {
   };
 
   return (
-    <div className="h-[100dvh] max-h-[100dvh] w-full overflow-hidden relative bg-[#050505] font-sans text-white select-none flex flex-col pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]">
+    <div className="keep-dark h-[100dvh] max-h-[100dvh] w-full overflow-hidden relative bg-[#050505] font-sans text-white select-none flex flex-col pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]">
       {/* CSS Keyframes cho hiệu ứng RGB Animation sống động */}
       <style>{`
         @keyframes rgb-flow {
