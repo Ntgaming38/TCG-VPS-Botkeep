@@ -69,7 +69,7 @@ function loginProviderLabel(loginMethod?: string | null) {
 
 function loginProviderBadgeClass(loginMethod?: string | null) {
   if (loginMethod?.toLowerCase() === "google") return "border-red-400/30 bg-red-500/10 text-red-200";
-  if (loginMethod?.toLowerCase() === "apple") return "border-slate-300/30 bg-slate-400/10 text-slate-100";
+  if (loginMethod?.toLowerCase() === "apple") return "border-slate-300/30 bg-slate-400/10 text-slate-600 dark:text-slate-100";
   return "border-sky-400/30 bg-sky-500/10 text-sky-100";
 }
 
