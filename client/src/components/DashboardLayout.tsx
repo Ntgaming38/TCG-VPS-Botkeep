@@ -22,6 +22,7 @@ import {
 import { startLogin } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
 import MobileTabBar from "./MobileTabBar";
+import { SidebarAIAssistant } from "./SidebarAIAssistant";
 import {
   BarChart3, LogOut, PanelLeft, CreditCard, Box, Gift, Package, RefreshCw, UserRoundCog, Store,
   ChevronDown, ChevronLeft, ChevronRight,
@@ -356,6 +357,7 @@ function DashboardLayoutContent({
           </SidebarContent>
 
           <SidebarFooter className="border-t border-white/10 p-3">
+            <SidebarAIAssistant />
             <button
               onClick={logout}
               aria-label="Đăng xuất"

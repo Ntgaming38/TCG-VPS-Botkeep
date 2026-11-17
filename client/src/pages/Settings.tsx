@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Archive, BellRing, ChevronDown, ChevronUp, CircleAlert, CircleCheck, Clock3, DollarSign, Download, FileText, FileUp, ImageUp, PackageSearch, Plus, Radio, RefreshCw, Save, SlidersHorizontal, Sparkles, TimerReset, Trash2, Upload, Volume2, VolumeX } from "lucide-react";
+import { Archive, BellRing, Bot, ChevronDown, ChevronUp, CircleAlert, CircleCheck, Clock3, DollarSign, Download, FileText, FileUp, ImageUp, PackageSearch, Plus, Radio, RefreshCw, Save, SlidersHorizontal, Sparkles, TimerReset, Trash2, Upload, Volume2, VolumeX } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import { getAiChatEnabled, setAiChatEnabled } from "@/lib/aiChatSettings";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
@@ -29,7 +30,7 @@ const BATCH_SIZES = [6, 12, 18, 20] as const;
 const TRASH_RETENTION_DAYS = [7, 14, 30, 60, 90, 180] as const;
 type SourceDraft = { label: string; sourceUrl: string; checkIntervalMinutes: string; isActive: boolean };
 type SourceFilter = "all" | "errors";
-type SettingsSection = "rgb" | "currency" | "productImages" | "saleLocations" | "backup" | "activity" | "chyusen" | "sources" | "marketplace" | "trash" | "background" | "backgroundDaily" | "backgroundHistory" | "pushNotifications";
+type SettingsSection = "rgb" | "currency" | "productImages" | "saleLocations" | "backup" | "activity" | "chyusen" | "sources" | "marketplace" | "trash" | "background" | "backgroundDaily" | "backgroundHistory" | "pushNotifications" | "aiChat";
 
 function statusStyle(status?: string | null) {
   if (status === "unavailable") return "border-red-200 bg-red-50 text-red-700";
@@ -75,7 +76,14 @@ export default function Settings() {
   const [restoreMode, setRestoreMode] = useState<"merge" | "overwrite">("merge");
   const [reportMonth, setReportMonth] = useState(() => new Date().toISOString().slice(0, 7));
   const [reportAccentColor, setReportAccentColor] = useState("#DC2626");
-  const [collapsedSettingsSections, setCollapsedSettingsSections] = useState<Record<SettingsSection, boolean>>({ rgb: true, currency: true, productImages: true, saleLocations: true, backup: false, activity: true, chyusen: true, sources: true, marketplace: true, trash: true, background: true, backgroundDaily: true, backgroundHistory: true, pushNotifications: true });
+  const [collapsedSettingsSections, setCollapsedSettingsSections] = useState<Record<SettingsSection, boolean>>({ rgb: true, currency: true, productImages: true, saleLocations: true, backup: false, activity: true, chyusen: true, sources: true, marketplace: true, trash: true, background: true, backgroundDaily: true, backgroundHistory: true, pushNotifications: true, aiChat: true });
+
+  const [aiChatEnabled, setAiChatEnabledState] = useState<boolean>(() => getAiChatEnabled());
+  const aiStatus = trpc.ai.status.useQuery();
+  const updateAiChatEnabled = (checked: boolean) => {
+    setAiChatEnabledState(checked);
+    setAiChatEnabled(checked);
+  };
 
   const updateSettings = trpc.chyusen.updateNotificationSettings.useMutation({ onSuccess: () => { utils.chyusen.notificationSettings.invalidate(); toast.success("Đã cập nhật cài đặt nhắc hạn."); } });
   const updateSource = trpc.chyusen.updateSource.useMutation({ onSuccess: () => { utils.chyusen.sources.invalidate(); toast.success("Đã lưu thay đổi nguồn theo dõi."); } });
@@ -342,6 +350,11 @@ export default function Settings() {
     <Card className="settings-collapsible-panel" data-collapsed={collapsedSettingsSections.pushNotifications}>
       <CardHeader data-settings-header onClick={(event) => toggleSettingsSection("pushNotifications", event)}><CardTitle className="flex items-center gap-2"><BellRing className="h-5 w-5 text-red-400" />Thông báo đẩy</CardTitle><CardDescription>Nhận thông báo ngay trên điện thoại khi có tin Chyusen mới hoặc giá Shop SNKR biến động trong các lượt đồng bộ tự động — kể cả khi app đang đóng. Mỗi thiết bị bật riêng một lần; trên iPhone cần mở app từ icon ngoài Màn hình chính (iOS 16.4 trở lên).</CardDescription></CardHeader>
       <CardContent><PushNotificationSettings /></CardContent>
+    </Card>
+
+    <Card className="settings-collapsible-panel" data-collapsed={collapsedSettingsSections.aiChat}>
+      <CardHeader data-settings-header onClick={(event) => toggleSettingsSection("aiChat", event)}><CardTitle className="flex items-center gap-2"><Bot className="h-5 w-5 text-sky-500" />Trợ lý AI</CardTitle><CardDescription>Trò chuyện hỏi đáp dựa trên dữ liệu thật của bạn — kho hàng, mua bán, lợi nhuận và Chyusen. AI chỉ đọc số liệu để trả lời, không sửa hay xóa dữ liệu. Nút Trợ lý AI nằm ở cuối thanh bên, trên nút Đăng xuất.</CardDescription></CardHeader>
+      <CardContent className="space-y-3"><div className="flex items-center justify-between gap-4 rounded-lg border p-3"><div><p className="text-sm font-semibold">Hiển thị Trợ lý AI</p><p className="mt-1 text-xs text-muted-foreground">{aiChatEnabled ? "Đang bật trên thiết bị này" : "Đang tắt trên thiết bị này — bật lại để hiện nút Trợ lý AI ở thanh bên"}</p></div><Switch checked={aiChatEnabled} onCheckedChange={updateAiChatEnabled} aria-label="Bật hoặc tắt Trợ lý AI" /></div><div className="rounded-lg border p-3"><p className="text-sm font-semibold">Kết nối mô hình</p><p className="mt-1 text-xs text-muted-foreground">{aiStatus.isLoading ? "Đang kiểm tra..." : aiStatus.data?.configured ? `Đã cấu hình — model đang dùng: ${aiStatus.data.model}.` : "Chưa cấu hình khóa API. Cần đặt biến AI_API_KEY trong phần Environment của app trên Botkeep rồi khởi động lại app thì Trợ lý mới trả lời được."}</p><p className="mt-2 text-xs text-muted-foreground">Khi bạn hỏi, một bản tóm tắt số liệu (vốn, lãi, tồn kho, Chyusen) được gửi tới Google Gemini để xử lý — giống cách AI của Bot-RAPTOR đang chạy.</p></div></CardContent>
     </Card>
 
     <Card className="settings-collapsible-panel" data-collapsed={collapsedSettingsSections.rgb}>

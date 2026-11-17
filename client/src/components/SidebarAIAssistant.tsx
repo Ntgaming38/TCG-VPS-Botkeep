@@ -7,10 +7,23 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
 import { normalizeAiCurrencyToYen } from "@shared/aiCurrency";
+import { AI_CHAT_SETTINGS_EVENT, getAiChatEnabled } from "@/lib/aiChatSettings";
 
 const STORAGE_KEY = "tcg-manager-ai-assistant-history";
 
 export function SidebarAIAssistant() {
+  const [enabled, setEnabled] = useState<boolean>(() => getAiChatEnabled());
+
+  useEffect(() => {
+    const sync = () => setEnabled(getAiChatEnabled());
+    window.addEventListener(AI_CHAT_SETTINGS_EVENT, sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener(AI_CHAT_SETTINGS_EVENT, sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
+
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
 
@@ -35,9 +48,10 @@ export function SidebarAIAssistant() {
     const topCards = analysisContext?.topCardsAnalysis || [];
     if (topCards.length === 0) {
       return [
-        "📈 Hướng dẫn thêm thẻ bài (Card) vào kho",
-        "💡 Cách theo dõi lợi nhuận và ROI trong TCG Manager",
-        "🔍 Tổng quan tính năng quản lý kho hàng",
+        "💰 Tháng này lãi bao nhiêu?",
+        "🎟️ Sắp tới có Chyusen nào cần xử lý không?",
+        "📦 Sản phẩm nào đang chiếm vốn nhiều nhất?",
+        "📉 Sản phẩm nào trong kho đang lỗ?",
       ];
     }
 
@@ -45,9 +59,10 @@ export function SidebarAIAssistant() {
     const cardCount = analysisContext?.inventorySummary?.totalCardsInStock || topCards.length;
 
     const prompts = [
+      "💰 Tháng này lãi bao nhiêu?",
+      "🎟️ Sắp tới có Chyusen nào cần xử lý không?",
       `📈 Phân tích xu hướng giá và lợi nhuận cho thẻ "${bestCard.name}"`,
       `⭐ Thẻ bài nào trong ${cardCount} thẻ đang có tỷ suất ROI cao nhất?`,
-      `💰 Đánh giá chi tiết lợi nhuận chưa thực hiện của danh mục Card`,
     ];
 
     if (topCards.length > 1) {
@@ -68,7 +83,7 @@ export function SidebarAIAssistant() {
     },
   });
 
-  const placeholder = useMemo(() => "Hỏi về xu hướng giá, ROI, lợi nhuận thẻ bài...", []);
+  const placeholder = useMemo(() => "Hỏi về lãi tháng này, sản phẩm đang lỗ, hạn Chyusen...", []);
 
   const handleSendMessage = (content: string) => {
     const nextMessages: Message[] = [...messages, { role: "user" as const, content }].slice(-12);
@@ -84,20 +99,22 @@ export function SidebarAIAssistant() {
     toast.success("Đã xóa lịch sử trò chuyện của phiên này.");
   };
 
+  if (!enabled) return null;
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          className="mb-3 h-auto w-full justify-start gap-3 border-primary/40 bg-primary/10 px-3 py-2.5 text-left text-white hover:border-primary hover:bg-primary/20 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2 shadow-sm"
+          className="mb-3 h-auto w-full justify-start gap-3 border-primary/40 bg-primary/10 px-3 py-2.5 text-left hover:border-primary hover:bg-primary/20 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2 shadow-sm"
           aria-label="Mở Trợ lý AI"
         >
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/25 text-white">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/25 text-primary">
             <Sparkles className="size-4" />
           </span>
           <span className="min-w-0 group-data-[collapsible=icon]:hidden">
-            <span className="block text-sm font-bold text-white tracking-wide">Trợ lý AI</span>
-            <span className="mt-0.5 block truncate text-[11px] font-medium text-slate-300">Phân tích giá & lợi nhuận Card</span>
+            <span className="block text-sm font-bold tracking-wide">Trợ lý AI</span>
+            <span className="mt-0.5 block truncate text-[11px] font-medium text-muted-foreground">Hỏi đáp kho, lãi & Chyusen</span>
           </span>
         </Button>
       </DialogTrigger>
@@ -128,7 +145,7 @@ export function SidebarAIAssistant() {
             </AlertDialog>
           </div>
           <DialogDescription className="mt-2 text-xs leading-5 sm:text-sm">
-            Phân tích sâu về xu hướng giá, tỷ suất ROI và lợi nhuận chưa thực hiện của các thẻ bài trong kho.
+            Hỏi đáp và phân tích dựa trên dữ liệu thật của bạn: kho hàng, mua bán, lợi nhuận và các đợt Chyusen sắp tới hạn. AI chỉ đọc số liệu để trả lời, không sửa dữ liệu.
           </DialogDescription>
         </DialogHeader>
 
@@ -139,7 +156,7 @@ export function SidebarAIAssistant() {
             isLoading={assistantMutation.isPending}
             placeholder={placeholder}
             height="100%"
-            emptyStateMessage="Tôi có thể phân tích xu hướng giá, ROI và lợi nhuận thẻ bài dựa trên kho hàng thực tế của bạn."
+            emptyStateMessage="Tôi trả lời dựa trên dữ liệu thật trong TCG Manager của bạn: vốn, lãi, tồn kho, giao dịch gần đây và Chyusen."
             suggestedPrompts={dynamicPrompts}
             className="border-primary/20 shadow-none"
           />
