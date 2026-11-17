@@ -9,9 +9,7 @@ import { parse as parseCookieHeader } from "cookie";
 import * as db from "./db";
 import { sdk } from "./_core/sdk";
 import { hashPassword, verifyPassword } from "./_core/passwordAuth";
-import { invokeLLM } from "./_core/llm";
-import { extractAssistantText } from "./aiResponse";
-import { buildTcgAssistantSystemPrompt } from "./tcgAssistantPrompt";
+import { askAiChat, getAiChatStatus } from "./aiChat";
 import * as chyusenDb from "./chyusenDb";
 import { parseChyusenUrl } from "./chyusenSource";
 import { validatePublicChyusenUrl } from "./chyusenUtils";
@@ -233,54 +231,9 @@ export const appRouter = router({
           content: z.string().trim().min(1).max(2000),
         })).min(1).max(12),
       }))
-      .mutation(async ({ ctx, input }) => {
-        try {
-          const cardProducts = await db.listProducts(ctx.user.id, { type: "card" });
-          const cardAnalysis = cardProducts.map((p: any) => {
-            const buyP = Number(p.buyPrice || 0);
-            const marketP = Number(p.marketPrice || buyP);
-            const unrealizedProfit = (marketP - buyP) * Math.max(0, p.quantity - (p.damagedQuantity || 0));
-            const roi = buyP > 0 ? Number((((marketP - buyP) / buyP) * 100).toFixed(1)) : 0;
-            return {
-              id: p.id,
-              name: p.name,
-              buyPrice: buyP,
-              marketPrice: marketP,
-              suggestedMarketPrice: marketP,
-              unrealizedProfit,
-              roi,
-              quantity: p.quantity,
-            };
-          });
-          cardAnalysis.sort((a, b) => b.unrealizedProfit - a.unrealizedProfit);
-          const stats = await db.getDashboardStats(ctx.user.id);
-          const context = {
-            dashboard: stats,
-            topCardsAnalysis: cardAnalysis.slice(0, 10),
-          };
+      .mutation(({ ctx, input }) => askAiChat(ctx.user.id, input.messages)),
 
-          const response = await invokeLLM({
-            model: "claude-haiku-4-5",
-            maxTokens: 1000,
-            messages: [
-              {
-                role: "system",
-                content: buildTcgAssistantSystemPrompt(context),
-              },
-              ...input.messages.map((m) => ({ role: m.role, content: m.content })),
-            ],
-          });
-
-          const content = extractAssistantText(response);
-          if (!content) {
-            throw new Error(`LLM không trả về nội dung hiển thị được (finish_reason: ${response.choices?.[0]?.finish_reason ?? "unknown"}).`);
-          }
-          return content;
-        } catch (error) {
-          console.error("AI chat error:", error);
-          return "Xin lỗi, hiện tại Trợ lý AI chưa thể hoàn tất phân tích. Vui lòng thử lại sau ít phút.";
-        }
-      }),
+    status: protectedProcedure.query(() => getAiChatStatus()),
 
     analysisChartData: protectedProcedure
       .query(async ({ ctx }) => {
