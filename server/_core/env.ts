@@ -15,7 +15,9 @@ export const ENV = {
   // Web Push VAPID "sub" claim: a contact for push services. The VAPID
   // keypair itself is generated and stored by the app (see pushDb).
   vapidSubject: process.env.VAPID_SUBJECT ?? "mailto:admin@tcg-manager.local",
-  storageDir: process.env.STORAGE_DIR ?? "./dist/public/uploads",
+  // Uploads live OUTSIDE dist/ on purpose: every start runs a vite build that
+  // empties dist/, which used to wipe all uploaded/whitened product images.
+  storageDir: process.env.STORAGE_DIR ?? "./uploads",
   googleClientId: process.env.GOOGLE_CLIENT_ID ?? "",
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
   googleRedirectUri: process.env.GOOGLE_REDIRECT_URI ?? "",

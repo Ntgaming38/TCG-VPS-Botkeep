@@ -1,5 +1,6 @@
 // Self-host storage: local disk (Oracle VPS free) with Forge fallback.
-// Uploads go to STORAGE_DIR (default ./dist/public/uploads) and are served as /uploads/{key}.
+// Uploads go to STORAGE_DIR (default ./uploads — deliberately outside dist/,
+// whose contents the vite build wipes on every start) and are served as /uploads/{key}.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -84,6 +85,29 @@ export async function storagePut(
   }
 
   return { key, url: `/manus-storage/${key}` };
+}
+
+/** True when an image value points at a locally stored upload ("/uploads/..."). */
+export function isLocalUploadImageUrl(image: string | null | undefined): boolean {
+  return Boolean(image?.startsWith("/uploads/"));
+}
+
+/**
+ * True when an image value is a local upload whose file is missing on disk.
+ * A missing file means the stored URL can only render as a broken image, so
+ * callers should re-create the image from its source instead of keeping the
+ * dead path. Forge ("/manus-storage/") images are not local files and are
+ * never reported missing here.
+ */
+export function isMissingLocalUploadImage(image: string | null | undefined): boolean {
+  if (!isLocalUploadImageUrl(image)) return false;
+  const relKey = (image as string).slice("/uploads/".length);
+  if (!relKey || relKey.includes("..")) return true;
+  try {
+    return !fs.existsSync(path.join(path.resolve(ENV.storageDir), relKey));
+  } catch {
+    return true;
+  }
 }
 
 export async function storageGet(relKey: string): Promise<{ key: string; url: string }> {

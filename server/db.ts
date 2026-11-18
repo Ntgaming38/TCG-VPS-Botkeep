@@ -5,6 +5,7 @@ import type { InsertProduct, InsertPurchase, InsertSale, InsertShop } from "../d
 import { ENV } from './_core/env';
 import { fetchSnkrdunkPrice, fetchSnkrdunkProductMetadata, isSnkrdunkGenericImageUrl, isValidSnkrdunkUrl } from './snkrdunk';
 import { whitenAndStoreImage, tryWhitenAndStore } from './imageWhiten';
+import { isMissingLocalUploadImage } from './storage';
 import { summarizeCardRarityQuantities } from '../shared/cardRarity';
 import { sortProductsByRecentPurchase } from '../shared/productRecentOrder';
 import { formatRemainingTime, getChyusenTimeState, getChyusenUrgency } from './chyusenUtils';
@@ -651,7 +652,7 @@ export async function updateSnkrdunkUrl(id: number, userId: number, snkrdunkUrl:
   } catch {
     // Giá và ảnh có thể được làm mới ở lần đồng bộ sau nếu nguồn công khai tạm thời không phản hồi.
   }
-  const shouldReplaceImage = !product.image || product.image.includes("snkrdunk.com") || isSnkrdunkGenericImageUrl(product.image);
+  const shouldReplaceImage = !product.image || product.image.includes("snkrdunk.com") || isSnkrdunkGenericImageUrl(product.image) || isMissingLocalUploadImage(product.image);
   // Tự động tẩy nền đen khi nhập link: thất bại thì giữ URL gốc, không chặn lưu link.
   let whitenedImage: string | null = null;
   if (sourceImage && shouldReplaceImage) {
@@ -686,8 +687,14 @@ export async function refreshProductImageFromSnkrdunk(id: number, userId: number
   }
 
   // Storage images are approved white-background or user-uploaded variants.
-  // Keep them instead of replacing them with a raw CDN image on refresh.
-  const keepsCurrentStorageImage = Boolean(product.image?.startsWith("/manus-storage/") || product.image?.startsWith("/uploads/"));
+  // Keep them instead of replacing them with a raw CDN image on refresh —
+  // but only while the file is actually on disk: a local upload whose file
+  // is gone renders as a broken image, so rebuild it from SNKRDUNK instead
+  // of keeping the dead path.
+  const keepsCurrentStorageImage = Boolean(
+    (product.image?.startsWith("/manus-storage/") || product.image?.startsWith("/uploads/")) &&
+      !isMissingLocalUploadImage(product.image),
+  );
   const nextImage = keepsCurrentStorageImage
     ? product.image
     : ((await tryWhitenAndStore(metadata.imageUrl, `products/${id}`, 0.15)) ?? metadata.imageUrl);
@@ -753,12 +760,18 @@ export async function syncSnkrdunkPriceForProduct(id: number, userId: number) {
   try {
     const result = await fetchSnkrdunkPrice(product.snkrdunkUrl, product.type as "card" | "box" | "pack", cardRank);
     let sourceImage: string | null = null;
-    const shouldRefreshImage = !product.image || product.image.includes("snkrdunk.com") || isSnkrdunkGenericImageUrl(product.image);
+    const imageFileMissing = isMissingLocalUploadImage(product.image);
+    const shouldRefreshImage = !product.image || product.image.includes("snkrdunk.com") || isSnkrdunkGenericImageUrl(product.image) || imageFileMissing;
     if (shouldRefreshImage) {
       try {
         sourceImage = (await fetchSnkrdunkProductMetadata(product.snkrdunkUrl)).imageUrl;
       } catch {
         // Keep the current image when metadata is temporarily unavailable.
+      }
+      if (sourceImage && imageFileMissing) {
+        // Heal a local image whose file was lost: store a fresh whitened copy
+        // (falling back to the source URL) instead of another dead path.
+        sourceImage = (await tryWhitenAndStore(sourceImage, `products/${id}`, 0.15)) ?? sourceImage;
       }
     }
     const priceDecision = resolveMarketplacePriceUpdate(product.marketPrice, result.price);

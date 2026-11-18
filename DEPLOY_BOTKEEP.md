@@ -104,7 +104,7 @@ ADMIN_EMAIL=admin@local
 ADMIN_PASSWORD=<mat-khau-admin>
 ADMIN_OPENID=local-admin
 CRON_SECRET=<chuoi-bi-mat>
-STORAGE_DIR=./dist/public/uploads
+STORAGE_DIR=./uploads
 # Gmail SMTP (nếu cần gửi mail xác thực / khôi phục mật khẩu)
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=465
