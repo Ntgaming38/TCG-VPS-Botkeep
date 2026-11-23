@@ -388,7 +388,7 @@ function DashboardLayoutContent({
 
       <SidebarInset>
         {isMobile && (pullDistance > 0 || isRefreshing) && <div className="fixed left-1/2 top-2 z-[60] flex -translate-x-1/2 items-center gap-2 rounded-full border border-primary/40 bg-background/95 px-3 py-1.5 text-xs font-medium text-primary shadow-lg backdrop-blur"><RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />{isRefreshing ? "Đang làm mới..." : pullDistance >= 72 ? "Thả để làm mới" : "Kéo xuống để làm mới"}</div>}
-        <div className="sticky top-0 z-40 px-3 pt-[calc(env(safe-area-inset-top,0px)+10px)] md:px-5">
+        <div className="app-topbar-wrap sticky top-0 z-40 pt-[calc(env(safe-area-inset-top,0px)+10px)]">
           <div className="flex min-h-14 items-center justify-between app-topbar rounded-2xl border border-white/10 bg-background/70 px-3 shadow-[0_12px_32px_rgba(0,0,0,0.32)] backdrop-blur-xl backdrop-saturate-150">
           <div className="flex items-center gap-2 sidebar-mobile-trigger left-0">
             <button

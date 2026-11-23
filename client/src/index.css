@@ -162,6 +162,10 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', 'Outfit', system-ui, sans-serif;
+    /* Không phần tử nào được kéo trang tràn ngang: các thanh nổi neo theo
+       khung nhìn, chỉ một thẻ quá rộng cũng làm chúng lệch khỏi khung máy.
+       "clip" (không phải hidden) nên không phá position: sticky. */
+    overflow-x: clip;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -818,6 +822,27 @@
    bộ token charcoal ở trên. Các ghi đè đặt ngoài @layer nên thắng
    utility của Tailwind ở những chỗ class màu đang ghi cứng.
    ============================================================ */
+
+/* ============================================================
+   Khung thanh nổi khớp mọi khung hình điện thoại: topbar và tabbar
+   dùng cùng lề ngang với cột nội dung (16px) thay cho 12px trước đây
+   — khung bar nhô ra hai bên so với các thẻ nội dung — và tôn trọng
+   vùng an toàn tai thỏ khi xoay ngang. Ngoài @layer để thắng utility.
+   ============================================================ */
+.app-topbar-wrap {
+  padding-left: max(1rem, env(safe-area-inset-left, 0px));
+  padding-right: max(1rem, env(safe-area-inset-right, 0px));
+}
+@media (min-width: 768px) {
+  .app-topbar-wrap {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+}
+.mobile-tabbar {
+  left: max(1rem, env(safe-area-inset-left, 0px));
+  right: max(1rem, env(safe-area-inset-right, 0px));
+}
 
 html.light { color-scheme: light; }
 html.dark { color-scheme: dark; }
