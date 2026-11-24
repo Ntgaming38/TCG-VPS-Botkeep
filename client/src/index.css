@@ -831,6 +831,9 @@
    utility trong component.
    ============================================================ */
 .app-topbar {
+  /* Chừa vùng an toàn trên + 10px thở: chỉ tính vùng an toàn thì hàng
+     nút dính sát thanh trạng thái, huy hiệu chuông bị góc màn hình che. */
+  padding-top: calc(env(safe-area-inset-top, 0px) + 0.625rem);
   padding-left: max(1rem, env(safe-area-inset-left, 0px));
   padding-right: max(1rem, env(safe-area-inset-right, 0px));
 }

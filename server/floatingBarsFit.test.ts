@@ -17,7 +17,6 @@ describe("top and bottom bars sit flush with the phone screen edges", () => {
   it("topbar is a single docked strip stuck to the top edge, not a floating pill", () => {
     const barLine = lineWith(layout, "app-topbar sticky top-0 z-40");
     expect(barLine).toContain("border-b");
-    expect(barLine).toContain("pt-[env(safe-area-inset-top,0px)]");
     expect(barLine).not.toContain("rounded-2xl");
     expect(layout).not.toContain("app-topbar-wrap");
   });
@@ -31,6 +30,10 @@ describe("top and bottom bars sit flush with the phone screen edges", () => {
 
   it("no frosted band or other overlay strip is left behind either bar", () => {
     expect(layout).not.toContain("mobile-tabbar-band");
+  });
+
+  it("topbar content clears the status bar by the safe area plus a breathing gap", () => {
+    expect(css).toContain("padding-top: calc(env(safe-area-inset-top, 0px) + 0.625rem)");
   });
 
   it("bar padding respects the notch safe areas, and the tab bar clears the home indicator", () => {
