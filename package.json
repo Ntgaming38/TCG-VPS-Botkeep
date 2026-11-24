@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "tsx watch server/_core/index.ts",
-    "build": "node --max-old-space-size=1792 ./node_modules/vite/bin/vite.js build && esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "build": "node --max-old-space-size=1280 ./node_modules/vite/bin/vite.js build && esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "npm run build && node dist/index.js",
     "check": "tsc --noEmit",
     "format": "prettier --write .",
