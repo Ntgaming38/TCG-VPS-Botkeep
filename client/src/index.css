@@ -824,24 +824,26 @@
    ============================================================ */
 
 /* ============================================================
-   Khung thanh nổi khớp mọi khung hình điện thoại: topbar và tabbar
-   dùng cùng lề ngang với cột nội dung (16px) thay cho 12px trước đây
-   — khung bar nhô ra hai bên so với các thẻ nội dung — và tôn trọng
-   vùng an toàn tai thỏ khi xoay ngang. Ngoài @layer để thắng utility.
+   Hai thanh DÁN SÁT mép trên/dưới màn hình (không nổi lơ lửng):
+   thanh trên là dải dính full ngang ở đỉnh, thanh tab dán sát đáy.
+   Đệm ngang tính vùng an toàn tai thỏ khi xoay ngang; đệm dưới của
+   thanh tab chừa đúng vùng home indicator. Ngoài @layer để thắng
+   utility trong component.
    ============================================================ */
-.app-topbar-wrap {
+.app-topbar {
   padding-left: max(1rem, env(safe-area-inset-left, 0px));
   padding-right: max(1rem, env(safe-area-inset-right, 0px));
 }
 @media (min-width: 768px) {
-  .app-topbar-wrap {
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
+  .app-topbar {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
   }
 }
 .mobile-tabbar {
-  left: max(1rem, env(safe-area-inset-left, 0px));
-  right: max(1rem, env(safe-area-inset-right, 0px));
+  padding-left: max(0.5rem, env(safe-area-inset-left, 0px));
+  padding-right: max(0.5rem, env(safe-area-inset-right, 0px));
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6px);
 }
 
 html.light { color-scheme: light; }

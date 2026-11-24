@@ -3,8 +3,8 @@ import { DollarSign, LayoutDashboard, ShoppingCart, Ticket, Warehouse } from "lu
 
 /**
  * Thanh điều hướng dưới cho bản điện thoại (chỉ hiện dưới breakpoint md,
- * và DashboardLayout chỉ gắn nó khi isMobile). Kiểu kính nổi khớp với
- * sidebar/topbar kính hiện tại; mục đang mở có nền pill xanh. Mục Chyusen
+ * và DashboardLayout chỉ gắn nó khi isMobile). Dán sát mép dưới màn hình,
+ * nền kính mờ khớp với topbar; mục đang mở có nền pill xanh. Mục Chyusen
  * mang chấm đỏ khi còn thông báo Chyusen chưa đọc — cùng nguồn số đếm
  * với chấm/badge ở sidebar.
  */
@@ -25,7 +25,7 @@ export default function MobileTabBar({ chyusenUnreadCount = 0 }: { chyusenUnread
   return (
     <nav
       aria-label="Điều hướng nhanh"
-      className="mobile-tabbar fixed bottom-[calc(env(safe-area-inset-bottom,0px)+10px)] z-50 flex rounded-[22px] border border-white/10 bg-[#101726]/80 p-1.5 shadow-[0_12px_32px_rgba(0,0,0,0.45)] backdrop-blur-2xl md:hidden"
+      className="mobile-tabbar fixed inset-x-0 bottom-0 z-50 flex border-t border-white/10 bg-[#101726]/90 pt-1.5 shadow-[0_-8px_28px_rgba(0,0,0,0.45)] backdrop-blur-2xl md:hidden"
     >
       {TAB_ITEMS.map((item) => {
         const active = isTabActive(location, item.path);
