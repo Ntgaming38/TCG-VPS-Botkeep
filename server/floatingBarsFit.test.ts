@@ -42,3 +42,21 @@ describe("floating bars fit every phone frame", () => {
     expect(css).toContain("overflow-x: clip");
   });
 });
+
+describe("content never peeks out from behind the floating bars", () => {
+  it("topbar strip is a frosted band, not a transparent gap above the pill", () => {
+    expect(layout).toContain("app-topbar-wrap sticky top-0 z-40 bg-background/75");
+    expect(layout).toContain("backdrop-blur-xl backdrop-saturate-150");
+  });
+
+  it("a frosted band sits behind the mobile tab bar down to the screen edge", () => {
+    expect(layout).toContain("mobile-tabbar-band pointer-events-none fixed inset-x-0 bottom-0 z-30");
+    expect(layout).toContain("h-[calc(env(safe-area-inset-bottom,0px)+84px)]");
+  });
+
+  it("the bottom band renders only on mobile, like the tab bar itself", () => {
+    const bandLine = layout.split("\n").find((line) => line.includes("mobile-tabbar-band"));
+    expect(bandLine).toContain("md:hidden");
+    expect(bandLine).toContain("isMobile");
+  });
+});
