@@ -36,6 +36,11 @@ describe("top and bottom bars sit flush with the phone screen edges", () => {
     expect(css).toContain("padding-top: calc(env(safe-area-inset-top, 0px) + 0.625rem)");
   });
 
+  it("standalone (home-screen) mode floors the top inset at the Dynamic Island status height", () => {
+    expect(css).toContain("@media (display-mode: standalone)");
+    expect(css).toContain("padding-top: calc(max(env(safe-area-inset-top, 0px), 59px) + 0.625rem)");
+  });
+
   it("bar padding respects the notch safe areas, and the tab bar clears the home indicator", () => {
     expect(css).toContain(".app-topbar {");
     expect(css).toContain(".mobile-tabbar {");

@@ -843,6 +843,16 @@
     padding-right: 1.5rem;
   }
 }
+/* App cài ra màn hình chính (standalone): iOS hay đọc thiếu
+   env(safe-area-inset-top) ở chế độ này (Safari thường thì đúng), khiến
+   thanh trên bị kéo lên sát vùng Dynamic Island và huy hiệu bị che.
+   Ép sàn 59px — chiều cao vùng trạng thái của iPhone Dynamic Island —
+   rồi mới cộng khoảng thở 10px như rule gốc. */
+@media (display-mode: standalone) {
+  .app-topbar {
+    padding-top: calc(max(env(safe-area-inset-top, 0px), 59px) + 0.625rem);
+  }
+}
 .mobile-tabbar {
   padding-left: max(0.5rem, env(safe-area-inset-left, 0px));
   padding-right: max(0.5rem, env(safe-area-inset-right, 0px));
