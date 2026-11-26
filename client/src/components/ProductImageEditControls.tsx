@@ -1,6 +1,6 @@
 import { FALLBACK_PRODUCT_IMAGE_URL } from "@/const";
 import { Button } from "@/components/ui/button";
-import { productImageFrameStyle, productImageImageStyle } from "@/lib/productImageDisplay";
+import { isGenericProductImageUrl, productImageFrameStyle, productImageImageStyle } from "@/lib/productImageDisplay";
 
 export type ImageEditPosition = { x: number; y: number };
 
@@ -17,7 +17,7 @@ type Props = {
 export function ProductImageEditControls({ src, alt, zoom, position, onZoomChange, onPositionChange, onReset }: Props) {
   return <div className="grid gap-3 rounded-xl border border-border bg-background/50 p-3 sm:grid-cols-[150px_1fr]">
     <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-white" style={productImageFrameStyle()}>
-      <img src={src || FALLBACK_PRODUCT_IMAGE_URL} alt={alt} draggable={false} className="h-full w-full select-none object-contain transition-transform duration-300 motion-reduce:transition-none" style={productImageImageStyle(zoom, position)} />
+      <img src={src && !isGenericProductImageUrl(src) ? src : FALLBACK_PRODUCT_IMAGE_URL} alt={alt} draggable={false} className="h-full w-full select-none object-contain transition-transform duration-300 motion-reduce:transition-none" style={productImageImageStyle(zoom, position)} />
     </div>
     <div className="space-y-3 text-sm">
       <div className="flex items-center justify-between gap-3"><LabelText>Zoom ảnh</LabelText><strong className="text-teal-300">{Math.round(zoom * 100)}%</strong></div>

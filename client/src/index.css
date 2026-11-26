@@ -859,22 +859,39 @@
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6px);
 }
 
-/* Cửa sổ dialog căn giữa theo chiều dọc: khi nội dung cao gần hết màn
-   hình (form dài như Thêm 抽選), mép trên của cửa sổ chui lên vùng
-   thanh trạng thái/Dynamic Island và nút X đóng cửa sổ bị che khuất.
-   Đẩy toàn bộ cửa sổ xuống theo vùng an toàn trên, đồng thời trừ vùng
-   an toàn vào chiều cao tối đa để mép dưới không tràn khỏi màn hình.
-   Ngoài @layer để thắng utility max-h trong component. */
-[data-slot="dialog-content"] {
-  margin-top: env(safe-area-inset-top, 0px);
-  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 1rem);
+/* KHUNG CỬA SỔ (thiết kế lại): mọi cửa sổ Dialog/AlertDialog nằm trong
+   một khung bọc toàn màn hình, khung tự chừa vùng an toàn ở cả 4 phía
+   (đệm = max(0.5rem, vùng an toàn)) rồi căn giữa cửa sổ bên trong.
+   Cửa sổ không còn tự căn giữa theo viewport nữa nên mép trên của nó
+   không bao giờ chui lên vùng thanh trạng thái/Dynamic Island và nút X
+   không bị che — kể cả form cao gần hết màn hình như Thêm 抽選.
+   Khung xuyên chạm (pointer-events: none) để cú chạm ngoài cửa sổ vẫn
+   rơi xuống lớp phủ và đóng cửa sổ như mặc định của Radix; chỉ cửa sổ
+   nhận chạm. Chiều cao cửa sổ bị chặn ở 100% chiều cao khung. */
+.dialog-frame {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  padding:
+    max(0.5rem, env(safe-area-inset-top, 0px))
+    max(0.5rem, env(safe-area-inset-right, 0px))
+    max(0.5rem, env(safe-area-inset-bottom, 0px))
+    max(0.5rem, env(safe-area-inset-left, 0px));
+}
+.dialog-frame > [data-slot="dialog-content"],
+.dialog-frame > [data-slot="alert-dialog-content"] {
+  pointer-events: auto;
+  max-height: 100%;
 }
 /* App cài ra màn hình chính (standalone): env(safe-area-inset-top) hay
    bị đọc thiếu như ở thanh trên — ép sàn 59px (vùng Dynamic Island). */
 @media (display-mode: standalone) {
-  [data-slot="dialog-content"] {
-    margin-top: max(env(safe-area-inset-top, 0px), 59px);
-    max-height: calc(100dvh - max(env(safe-area-inset-top, 0px), 59px) - env(safe-area-inset-bottom, 0px) - 1rem);
+  .dialog-frame {
+    padding-top: max(0.5rem, env(safe-area-inset-top, 0px), 59px);
   }
 }
 

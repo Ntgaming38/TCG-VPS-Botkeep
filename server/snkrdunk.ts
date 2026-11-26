@@ -101,8 +101,16 @@ export function isSnkrdunkGenericImageUrl(value: string | null | undefined): boo
   if (!value) return false;
   try {
     const url = new URL(value);
-    return url.hostname.toLowerCase() === "cdn.snkrdunk.com"
-      && /\/images\/ogp\/og-image\.png$/i.test(url.pathname);
+    const host = url.hostname.toLowerCase();
+    if (host !== "snkrdunk.com" && !host.endsWith(".snkrdunk.com")) return false;
+    const path = url.pathname.toLowerCase();
+    // Banner chia sẻ mạng xã hội của SNKRDUNK là ảnh ghép (sản phẩm + biểu đồ
+    // giá + logo), không phải ảnh sản phẩm thật. Nó xuất hiện ở hai dạng:
+    // /images/ogp/og-image.png trên CDN và route /apparels/<id>/opengraph-image
+    // mà og:image của trang sản phẩm trỏ tới.
+    return path.endsWith("/images/ogp/og-image.png")
+      || path.endsWith("/opengraph-image")
+      || path.endsWith("/opengraph-image.png");
   } catch {
     return false;
   }

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { FALLBACK_PRODUCT_IMAGE_URL } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { useProductImageZoom } from "@/hooks/useProductImageZoom";
-import { normalizeCustomProductImageZoom, productImageFrameStyle, productImageImageStyle, type ProductImageKind } from "@/lib/productImageDisplay";
+import { isGenericProductImageUrl, normalizeCustomProductImageZoom, productImageFrameStyle, productImageImageStyle, type ProductImageKind } from "@/lib/productImageDisplay";
 
 const DEFAULT_ZOOM = 1.12;
 
@@ -42,7 +42,7 @@ export function ProductImageAdjuster({ entity, id, kind, src, alt, initialZoom, 
     setFailed(false);
   }, [initialZoom, initialPositionX, initialPositionY, src, settingsZoom]);
 
-  const imageUrl = src && !failed ? src : FALLBACK_PRODUCT_IMAGE_URL;
+  const imageUrl = src && !failed && !isGenericProductImageUrl(src) ? src : FALLBACK_PRODUCT_IMAGE_URL;
   const isSaving = productZoom.isPending || snkrZoom.isPending;
   // Zoom and position are edited only from the Sửa form; the gallery image itself is read-only.
   return <div className={`relative flex aspect-square min-h-0 items-center justify-center overflow-hidden bg-white ${className}`} style={productImageFrameStyle()} onClick={(event) => event.stopPropagation()}>

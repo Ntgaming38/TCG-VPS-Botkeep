@@ -7,7 +7,7 @@
       worker can never serve stale business data as if it were live.
    Bump APP_SHELL_CACHE when the caching strategy changes to drop old caches. */
 
-const APP_SHELL_CACHE = "tcg-app-shell-v3";
+const APP_SHELL_CACHE = "tcg-app-shell-v4";
 const APP_SHELL_FILES = [
   "/",
   "/index.html",

@@ -26,6 +26,14 @@ describe("SNKRDUNK adapter", () => {
     expect(isSnkrdunkGenericImageUrl("https://cdn.snkrdunk.com/images/ogp/og-image.png")).toBe(true);
   });
 
+  it("ignores the SNKRDUNK opengraph-image banner route instead of saving it as a product image", () => {
+    const metadata = parseSnkrdunkProductMetadata('<meta property="og:image" content="https://snkrdunk.com/apparels/628148/opengraph-image?1ac4f6c638b53964"><script type="application/ld+json">{"image":"https://cdn.snkrdunk.com/products/real-box.webp"}</script>');
+    expect(metadata.imageUrl).toBe("https://cdn.snkrdunk.com/products/real-box.webp");
+    expect(isSnkrdunkGenericImageUrl("https://snkrdunk.com/apparels/628148/opengraph-image?1ac4f6c638b53964")).toBe(true);
+    expect(isSnkrdunkGenericImageUrl("https://cdn.snkrdunk.com/products/real-box.webp")).toBe(false);
+    expect(isSnkrdunkGenericImageUrl("https://example.com/apparels/628148/opengraph-image")).toBe(false);
+  });
+
   it("parses the real product thumbnail from the public product-detail response", () => {
     const metadata = parseSnkrdunkProductApiMetadata('{"product":{"name":"ONE PIECE Box","thumbnailUrl":"https://cdn.snkrdunk.com/upload_bg_removed/box.webp?size=s"}}');
     expect(metadata).toEqual({ title: "ONE PIECE Box", imageUrl: "https://cdn.snkrdunk.com/upload_bg_removed/box.webp?size=s" });

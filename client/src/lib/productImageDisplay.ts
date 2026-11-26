@@ -57,6 +57,27 @@ export function productImageScaleClass(value: ProductImageZoom) {
   return `scale-[${normalizeProductImageZoom(value)}]`;
 }
 
+/**
+ * Banner chia sẻ mạng xã hội của SNKRDUNK (ảnh ghép: sản phẩm + biểu đồ giá
+ * + logo) từng bị lưu nhầm thành ảnh đại diện sản phẩm. Nhận diện cả hai
+ * dạng URL để lớp hiển thị bỏ qua, dùng ảnh dự phòng thay thế — khớp với
+ * isSnkrdunkGenericImageUrl ở server/snkrdunk.ts.
+ */
+export function isGenericProductImageUrl(value: string | null | undefined): boolean {
+  if (!value) return false;
+  try {
+    const url = new URL(value, "https://snkrdunk.com");
+    const host = url.hostname.toLowerCase();
+    if (host !== "snkrdunk.com" && !host.endsWith(".snkrdunk.com")) return false;
+    const path = url.pathname.toLowerCase();
+    return path.endsWith("/images/ogp/og-image.png")
+      || path.endsWith("/opengraph-image")
+      || path.endsWith("/opengraph-image.png");
+  } catch {
+    return false;
+  }
+}
+
 export function productImageFrameClass() {
   return "flex aspect-square items-center justify-center overflow-hidden bg-white";
 }
