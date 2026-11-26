@@ -65,14 +65,14 @@ export default function SalesReceipt({ isOpen, onClose, saleData }: SalesReceipt
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
+          className="sales-receipt-overlay fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/70 backdrop-blur-md p-4"
         >
           <motion.div 
             initial={{ y: 100, opacity: 0, scale: 0.9 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 100, opacity: 0, scale: 0.9 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="flex flex-col items-center w-full max-w-[400px] gap-6"
+            className="my-auto flex flex-col items-center w-full max-w-[400px] gap-6"
           >
             {/* Action Buttons - Minimalist Style */}
             <div className="flex w-full justify-between items-center px-2">

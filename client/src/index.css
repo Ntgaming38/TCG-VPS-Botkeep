@@ -859,6 +859,59 @@
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6px);
 }
 
+/* Cửa sổ dialog căn giữa theo chiều dọc: khi nội dung cao gần hết màn
+   hình (form dài như Thêm 抽選), mép trên của cửa sổ chui lên vùng
+   thanh trạng thái/Dynamic Island và nút X đóng cửa sổ bị che khuất.
+   Đẩy toàn bộ cửa sổ xuống theo vùng an toàn trên, đồng thời trừ vùng
+   an toàn vào chiều cao tối đa để mép dưới không tràn khỏi màn hình.
+   Ngoài @layer để thắng utility max-h trong component. */
+[data-slot="dialog-content"] {
+  margin-top: env(safe-area-inset-top, 0px);
+  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 1rem);
+}
+/* App cài ra màn hình chính (standalone): env(safe-area-inset-top) hay
+   bị đọc thiếu như ở thanh trên — ép sàn 59px (vùng Dynamic Island). */
+@media (display-mode: standalone) {
+  [data-slot="dialog-content"] {
+    margin-top: max(env(safe-area-inset-top, 0px), 59px);
+    max-height: calc(100dvh - max(env(safe-area-inset-top, 0px), 59px) - env(safe-area-inset-bottom, 0px) - 1rem);
+  }
+}
+
+/* Các bề mặt dính mép trên còn lại cũng phải chừa vùng an toàn trên,
+   cùng chuẩn với thanh trên và cửa sổ dialog:
+   - Banner offline: dải chữ dính sát đỉnh, không chừa thì chữ chui
+     dưới thanh trạng thái/Dynamic Island.
+   - Vòng "kéo để làm mới": nằm đỉnh giữa màn hình, đúng vị trí
+     Dynamic Island.
+   - Lớp phủ hóa đơn bán hàng: nút Đóng ở mép trên của khối căn giữa,
+     máy ngắn thì bị đẩy lên sát vùng trạng thái.
+   - Biến --safe-top (sidebar mobile dùng): nhận cùng sàn 59px khi
+     standalone. */
+.connectivity-banner {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 0.375rem);
+}
+.ptr-indicator {
+  top: calc(env(safe-area-inset-top, 0px) + 0.5rem);
+}
+.sales-receipt-overlay {
+  padding-top: max(1rem, env(safe-area-inset-top, 0px));
+}
+@media (display-mode: standalone) {
+  :root {
+    --safe-top: max(env(safe-area-inset-top, 0px), 59px);
+  }
+  .connectivity-banner {
+    padding-top: calc(max(env(safe-area-inset-top, 0px), 59px) + 0.375rem);
+  }
+  .ptr-indicator {
+    top: calc(max(env(safe-area-inset-top, 0px), 59px) + 0.5rem);
+  }
+  .sales-receipt-overlay {
+    padding-top: max(1rem, env(safe-area-inset-top, 0px), 59px);
+  }
+}
+
 html.light { color-scheme: light; }
 html.dark { color-scheme: dark; }
 
