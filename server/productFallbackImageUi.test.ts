@@ -9,7 +9,7 @@ describe("ảnh fallback sản phẩm", () => {
     const constantSource = readClientFile("const.ts");
     const componentSource = readClientFile("components/ProductImageAdjuster.tsx");
     expect(constantSource).toContain("FALLBACK_PRODUCT_IMAGE_URL");
-    expect(constantSource).toContain("/manus-storage/tcg-product-fallback_93dfd725.png");
+    expect(constantSource).toContain("/product-fallback.svg");
     expect(componentSource).toContain("FALLBACK_PRODUCT_IMAGE_URL");
     expect(componentSource).toContain("object-contain");
     expect(componentSource).toContain("onError");
