@@ -12,7 +12,7 @@ describe("Tốc độ mở app (PWA)", () => {
   it("service worker mở trang theo kiểu stale-while-revalidate và chỉ cache phản hồi ok", () => {
     const sw = read("client/public/sw.js");
     expect(sw).toContain("stale-while-revalidate");
-    expect(sw).toContain("tcg-app-shell-v5");
+    expect(sw).toContain("tcg-app-shell-v6");
     expect(sw).toContain('request.mode === "navigate"');
     // Trang lỗi của nhà cung cấp (vd 503) không bao giờ được lưu làm vỏ app.
     expect(sw).toContain("fresh.ok");

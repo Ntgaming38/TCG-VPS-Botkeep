@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   filterProductsOffline,
+  INVENTORY_DEFAULT_LIST_INPUT,
   productsListCacheKey,
   readOfflineSnapshot,
   resolveProductsListFallback,
@@ -80,14 +81,14 @@ describe("Lọc sản phẩm offline phải khớp ngữ nghĩa lọc của serv
 
   it("fallback: ưu tiên snapshot đúng bộ lọc; thiếu thì lọc từ snapshot kho đầy đủ đã lưu", () => {
     const storage = new MemoryStorage();
-    saveOfflineSnapshot(productsListCacheKey({ status: "all" }), PRODUCTS, storage, 999);
+    saveOfflineSnapshot(productsListCacheKey(INVENTORY_DEFAULT_LIST_INPUT), PRODUCTS, storage, 999);
     const fallback = resolveProductsListFallback({ type: "card" }, storage);
     expect(fallback?.savedAt).toBe(999);
     expect(fallback?.data.map((p) => p.id)).toEqual([2]);
 
     const exactStorage = new MemoryStorage();
     saveOfflineSnapshot(productsListCacheKey({ type: "card" }), [PRODUCTS[1]], exactStorage, 555);
-    saveOfflineSnapshot(productsListCacheKey({ status: "all" }), PRODUCTS, exactStorage, 999);
+    saveOfflineSnapshot(productsListCacheKey(INVENTORY_DEFAULT_LIST_INPUT), PRODUCTS, exactStorage, 999);
     const exact = resolveProductsListFallback({ type: "card" }, exactStorage);
     expect(exact?.savedAt).toBe(555);
     expect(exact?.data.map((p) => p.id)).toEqual([2]);

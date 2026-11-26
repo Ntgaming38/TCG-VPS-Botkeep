@@ -44,7 +44,7 @@ export default function Inventory() {
 
   const { data: products, isOfflineSnapshot, savedAt: snapshotSavedAt } = useOfflineProductsList({
     type: typeFilter !== "all" ? typeFilter : undefined,
-    status: statusFilter === "all" ? "all" : statusFilter,
+    status: statusFilter === "all" ? undefined : statusFilter,
     search: search || undefined,
   });
   const { data: soldProducts } = useOfflineProductsList({ status: INVENTORY_HIDDEN_STATUS });

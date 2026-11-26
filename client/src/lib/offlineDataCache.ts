@@ -66,7 +66,7 @@ export function productsListCacheKey(input: { type?: string; status?: string; se
   return `products.list:${JSON.stringify(normalized)}`;
 }
 
-export const INVENTORY_DEFAULT_LIST_INPUT = { status: "all" } as const;
+export const INVENTORY_DEFAULT_LIST_INPUT = {} as const;
 export const IN_STOCK_CACHE_KEY = "products.inStock";
 
 export interface OfflineFilterableProduct {

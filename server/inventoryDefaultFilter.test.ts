@@ -7,6 +7,6 @@ describe("inventory default filter", () => {
     const source = readFileSync(join(process.cwd(), "client/src/pages/Inventory.tsx"), "utf8");
     expect(source).toContain('useState("all")');
     expect(source).toContain("setStatusFilter");
-    expect(source).toContain('statusFilter === "all" ? "all" : statusFilter');
+    expect(source).toContain('statusFilter === "all" ? undefined : statusFilter');
   });
 });
