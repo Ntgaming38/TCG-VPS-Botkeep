@@ -16,7 +16,7 @@ import { productTypeLabel, type ProductType } from "@shared/productCreateType";
 import { ProductTypeBadge } from "@/components/ProductTypeBadge";
 import { ProductNameSuggestions } from "@/components/ProductNameSuggestions";
 
-const DEFAULT_SHOPS = ["Geo", "Joshin", "Fruichi", "COMG!", "Toysrus", "Lawson", "Seven Eleven", "Family Mart"];
+const DEFAULT_SHOPS = ["Geo", "Joshin", "Fruichi", "COMG!", "Toysrus", "Lawson", "Seven Eleven", "Family Mart", "Pokémon Center"];
 const ADD_PURCHASE_SHOP_VALUE = "__add_purchase_shop";
 
 type SortField = "date" | "price" | "name";
@@ -166,6 +166,16 @@ export default function Purchases() {
   }, [savedShops]);
 
   const savedPurchaseShopByName = useMemo(() => new Map(savedShops.map((shop: any) => [shop.name.trim().toLocaleLowerCase(), shop])), [savedShops]);
+
+  // The edit form must offer every shop the create form offers, and must always
+  // include the purchase's current shop even when it is a legacy/custom value
+  // that is not in the option list — otherwise that shop can never be changed.
+  const editShopOptions = useMemo(() => {
+    const current = (editForm.shop || "").trim();
+    if (!current) return purchaseShopOptions;
+    const exists = purchaseShopOptions.some((name) => String(name).trim().toLocaleLowerCase() === current.toLocaleLowerCase());
+    return exists ? purchaseShopOptions : [editForm.shop, ...purchaseShopOptions];
+  }, [purchaseShopOptions, editForm.shop]);
 
   const selectedPurchaseUnitPrice = newPurchase.quantity > 0 ? Math.round(Number(newPurchase.price || 0) / newPurchase.quantity) : 0;
   const selectedPriceMatches = Boolean(selectedExistingProduct) && selectedPurchaseUnitPrice === Math.round(Number(selectedExistingProduct?.buyPrice || 0));
@@ -457,7 +467,7 @@ export default function Purchases() {
                 <Select value={editForm.shop} onValueChange={(v) => setEditForm(f => ({ ...f, shop: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {DEFAULT_SHOPS.map(shop => (
+                    {editShopOptions.map(shop => (
                       <SelectItem key={shop} value={shop}>{shop}</SelectItem>
                     ))}
                   </SelectContent>
