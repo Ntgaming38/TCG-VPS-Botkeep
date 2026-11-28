@@ -7,7 +7,7 @@
       worker can never serve stale business data as if it were live.
    Bump APP_SHELL_CACHE when the caching strategy changes to drop old caches. */
 
-const APP_SHELL_CACHE = "tcg-app-shell-v8";
+const APP_SHELL_CACHE = "tcg-app-shell-v9";
 const APP_SHELL_FILES = [
   "/",
   "/index.html",
@@ -61,7 +61,22 @@ self.addEventListener("fetch", (event) => {
         const fresh = await fetch(request);
         if (fresh.ok) {
           const cache = await cachePromise;
+          const cachedShell = await cache.match("/index.html");
+          const freshText = await fresh.clone().text();
+          const cachedText = cachedShell ? await cachedShell.text() : "";
           await cache.put("/index.html", fresh.clone());
+          if (cachedShell && freshText !== cachedText) {
+            // A new deploy landed: the cached /assets belong to the old
+            // build, whose files the server no longer has. Drop them so the
+            // next open loads the new build's assets fresh instead of
+            // mixing a new shell with dead old-build chunks.
+            const keys = await cache.keys();
+            await Promise.all(
+              keys
+                .filter((key) => new URL(key.url).pathname.startsWith("/assets/"))
+                .map((key) => cache.delete(key))
+            );
+          }
         }
         return fresh;
       } catch (error) {

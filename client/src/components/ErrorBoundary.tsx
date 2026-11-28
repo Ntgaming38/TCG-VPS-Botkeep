@@ -11,6 +11,8 @@ interface State {
   error: Error | null;
 }
 
+const SHELL_HEAL_KEY = "tcg-shell-heal-attempted";
+
 class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -19,6 +21,39 @@ class ErrorBoundary extends Component<Props, State> {
 
   static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
+  }
+
+  componentDidCatch() {
+    // A stale app shell — a cached index.html whose content-hashed build
+    // assets no longer exist on the server after a deploy — surfaces here as
+    // a failed lazy-chunk load, and pressing Reload can never heal it: the
+    // service worker serves the same broken shell again. Recover once per
+    // session by dropping every cache and the service worker registration,
+    // then reloading so the app fetches one consistent shell. If the error
+    // comes back after that, the normal error screen below stays (no loop).
+    let alreadyAttempted = true;
+    try {
+      alreadyAttempted = sessionStorage.getItem(SHELL_HEAL_KEY) === "1";
+      if (!alreadyAttempted) sessionStorage.setItem(SHELL_HEAL_KEY, "1");
+    } catch {
+      alreadyAttempted = true;
+    }
+    if (alreadyAttempted) return;
+    void (async () => {
+      try {
+        if ("caches" in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map((key) => caches.delete(key)));
+        }
+        if ("serviceWorker" in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.map((registration) => registration.unregister()));
+        }
+      } catch {
+        // Reload regardless — a fresh fetch is the point of the heal.
+      }
+      window.location.reload();
+    })();
   }
 
   render() {
