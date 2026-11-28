@@ -165,8 +165,6 @@ export default function Purchases() {
     });
   }, [savedShops]);
 
-  const savedPurchaseShopByName = useMemo(() => new Map(savedShops.map((shop: any) => [shop.name.trim().toLocaleLowerCase(), shop])), [savedShops]);
-
   // The edit form must offer every shop the create form offers, and must always
   // include the purchase's current shop even when it is a legacy/custom value
   // that is not in the option list — otherwise that shop can never be changed.
@@ -299,7 +297,7 @@ export default function Purchases() {
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {purchaseShopOptions.map(shop => (
-                      <SelectItem key={shop} value={shop}>{shop}{savedPurchaseShopByName.get(shop.trim().toLocaleLowerCase())?.useCount ? ` · ${savedPurchaseShopByName.get(shop.trim().toLocaleLowerCase()).useCount} lần` : ""}</SelectItem>
+                      <SelectItem key={shop} value={shop}>{shop}</SelectItem>
                     ))}
                     <SelectItem value={ADD_PURCHASE_SHOP_VALUE}>+ Thêm cửa hàng</SelectItem>
                   </SelectContent>
