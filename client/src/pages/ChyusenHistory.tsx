@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
 import {
@@ -46,6 +47,7 @@ export default function ChyusenHistory() {
   const [, setLocation] = useLocation();
   const [filter, setFilter] = useState<OutcomeFilter>("all");
   const [search, setSearch] = useState("");
+  const [undoPurchaseEntry, setUndoPurchaseEntry] = useState<any | null>(null);
 
   const invalidate = () => {
     utils.chyusen.resultHistory.invalidate();
@@ -64,6 +66,14 @@ export default function ChyusenHistory() {
   const markPurchaseCreated = trpc.chyusen.markPurchaseCreated.useMutation({
     onSuccess: () => {
       toast.success("Đã xác nhận mua hàng. Chyusen đã hoàn tất.");
+      invalidate();
+    },
+    onError: (error) => toast.error(error.message),
+  });
+  const undoPurchaseCreated = trpc.chyusen.undoPurchaseCreated.useMutation({
+    onSuccess: () => {
+      toast.success("Đã hoàn tác xác nhận mua hàng. Chyusen đã quay lại danh sách theo dõi.");
+      setUndoPurchaseEntry(null);
       invalidate();
     },
     onError: (error) => toast.error(error.message),
@@ -247,11 +257,40 @@ export default function ChyusenHistory() {
                     </Button>
                   </CardContent>
                 )}
+                {entry.purchaseCreatedAt && (
+                  <CardContent className="flex flex-wrap gap-2 border-t border-border/40 pt-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-amber-400/70 text-amber-300 hover:bg-amber-500/15 hover:text-amber-200"
+                      disabled={undoPurchaseCreated.isPending}
+                      onClick={() => setUndoPurchaseEntry(entry)}
+                    >
+                      <RotateCcw className="mr-1.5 h-3.5 w-3.5" />Hoàn tác Đã mua hàng
+                    </Button>
+                  </CardContent>
+                )}
               </Card>
             );
           })}
         </div>
       )}
+      <AlertDialog open={undoPurchaseEntry !== null} onOpenChange={(open) => !open && setUndoPurchaseEntry(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hoàn tác xác nhận đã mua hàng?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Chyusen <strong className="text-foreground">{undoPurchaseEntry?.title}</strong> sẽ bỏ đánh dấu “Đã chuyển sang Mua Hàng” và quay lại danh sách theo dõi (khôi phục khỏi Thùng rác nếu đang ở đó). Giao dịch mua đã tạo riêng ở trang Mua Hàng (nếu có) không bị thay đổi.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={undoPurchaseCreated.isPending}>Hủy</AlertDialogCancel>
+            <AlertDialogAction className="bg-amber-500 text-slate-950 hover:bg-amber-400" disabled={undoPurchaseCreated.isPending} onClick={() => undoPurchaseEntry && undoPurchaseCreated.mutate({ id: undoPurchaseEntry.id })}>
+              {undoPurchaseCreated.isPending ? "Đang hoàn tác..." : "Hoàn tác Đã mua hàng"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

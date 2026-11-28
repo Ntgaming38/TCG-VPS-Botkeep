@@ -44,3 +44,21 @@ export function parseChyusenPurchaseDraft(rawDraft: string | null): ChyusenPurch
 export function getChyusenEntryIdToMarkAfterPurchase(entryId: number | null): number | null {
   return entryId && entryId > 0 ? entryId : null;
 }
+
+/** Chuẩn hóa tên sản phẩm để so khớp bản nháp Chyusen với giao dịch vừa tạo. */
+export function normalizeChyusenProductName(name: string): string {
+  return name.trim().toLocaleLowerCase().replace(/\s+/g, " ");
+}
+
+/**
+ * Chỉ tự đánh dấu Chyusen đã mua khi giao dịch vừa tạo đúng là sản phẩm của
+ * bản nháp. Nếu người dùng đổi tên sản phẩm trong form (tạo một giao dịch
+ * khác hẳn), bản nháp cũ không được phép đánh dấu nhầm hồ sơ Chyusen.
+ */
+export function shouldMarkChyusenPurchaseAfterCreate(entryId: number | null, draftProductName: string, createdProductName: string): number | null {
+  const id = getChyusenEntryIdToMarkAfterPurchase(entryId);
+  if (!id) return null;
+  const draftName = normalizeChyusenProductName(draftProductName);
+  if (!draftName || draftName !== normalizeChyusenProductName(createdProductName)) return null;
+  return id;
+}

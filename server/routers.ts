@@ -789,9 +789,16 @@ export const appRouter = router({
     markPurchaseCreated: protectedProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ ctx, input }) => {
+        const entry = await chyusenDb.getChyusenEntry(ctx.user.id, input.id);
+        if (!entry) throw new Error("Không tìm thấy Chyusen.");
+        if (entry.applicationStatus !== "won" && entry.resultStatus !== "won") throw new Error("Chỉ Chyusen đã trúng mới có thể xác nhận mua hàng.");
         await chyusenDb.markChyusenPurchaseCreated(ctx.user.id, input.id);
         return chyusenDb.deleteChyusenEntry(ctx.user.id, input.id);
       }),
+
+    undoPurchaseCreated: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => chyusenDb.undoChyusenPurchaseCreated(ctx.user.id, input.id)),
 
     notifications: protectedProcedure.query(({ ctx }) => chyusenDb.listChyusenNotifications(ctx.user.id)),
 

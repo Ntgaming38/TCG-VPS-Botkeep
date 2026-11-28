@@ -9,7 +9,11 @@ describe("Chūsen purchase completion action", () => {
     expect(source).toContain("markPurchaseCreated = trpc.chyusen.markPurchaseCreated.useMutation");
     expect(source).toContain("Thêm vào Mua Hàng");
     expect(source).toContain("Đã mua hàng");
-    expect(source).toContain("markPurchaseCreated.mutate({ id: entry.id })");
+    // The button no longer fires immediately: it opens a confirmation dialog
+    // first, because the action also moves the entry to the Trash.
+    expect(source).toContain("setMarkPurchasedEntry(entry)");
+    expect(source).toContain("Xác nhận đã mua hàng?");
+    expect(source).toContain("markPurchaseCreated.mutate({ id: markPurchasedEntry.id })");
   });
 
   it("shows a pending label and refreshes Chūsen after completion", () => {

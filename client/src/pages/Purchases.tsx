@@ -10,7 +10,7 @@ import { trpc } from "@/lib/trpc";
 import { Plus, Search, ShoppingCart, Calendar, ArrowUpDown, ArrowUp, ArrowDown, Pencil, Pin, Trash2, CheckCircle2, AlertTriangle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { CHYUSEN_PURCHASE_DRAFT_STORAGE_KEY, getChyusenEntryIdToMarkAfterPurchase, parseChyusenPurchaseDraft } from "@shared/chyusenPurchaseDraft";
+import { CHYUSEN_PURCHASE_DRAFT_STORAGE_KEY, parseChyusenPurchaseDraft, shouldMarkChyusenPurchaseAfterCreate } from "@shared/chyusenPurchaseDraft";
 import { formatYen } from "@shared/formatYen";
 import { productTypeLabel, type ProductType } from "@shared/productCreateType";
 import { ProductTypeBadge } from "@/components/ProductTypeBadge";
@@ -37,6 +37,7 @@ export default function Purchases() {
     quantity: 1, price: 0, note: "",
   });
   const [pendingChyusenEntryId, setPendingChyusenEntryId] = useState<number | null>(null);
+  const [pendingChyusenProductName, setPendingChyusenProductName] = useState("");
   const [customPurchaseShopName, setCustomPurchaseShopName] = useState("");
   const [editingSavedShop, setEditingSavedShop] = useState<{ id: number; name: string } | null>(null);
   const [deleteSavedShopId, setDeleteSavedShopId] = useState<number | null>(null);
@@ -59,6 +60,7 @@ export default function Purchases() {
   const markChyusenPurchaseCreated = trpc.chyusen.markPurchaseCreated.useMutation({
     onSuccess: () => {
       setPendingChyusenEntryId(null);
+      setPendingChyusenProductName("");
       utils.chyusen.list.invalidate();
       utils.trash.list.invalidate();
       utils.dashboard.stats.invalidate();
@@ -96,6 +98,7 @@ export default function Purchases() {
     if (draft) {
       setNewPurchase(draft.purchase);
       setPendingChyusenEntryId(draft.chyusenEntryId);
+      setPendingChyusenProductName(draft.purchase.productName);
       setShowAddDialog(true);
     }
     if (rawDraft) localStorage.removeItem(CHYUSEN_PURCHASE_DRAFT_STORAGE_KEY);
@@ -104,7 +107,7 @@ export default function Purchases() {
   const createPurchase = trpc.purchases.create.useMutation({
     onSuccess: () => {
       toast.success("Đã thêm giao dịch mua thành công!");
-      const chyusenEntryId = getChyusenEntryIdToMarkAfterPurchase(pendingChyusenEntryId);
+      const chyusenEntryId = shouldMarkChyusenPurchaseAfterCreate(pendingChyusenEntryId, pendingChyusenProductName, newPurchase.productName);
       if (chyusenEntryId) markChyusenPurchaseCreated.mutate({ id: chyusenEntryId });
       setShowAddDialog(false);
       setNewPurchase({ productName: "", productType: "box", series: "Pokemon", shop: "Joshin", purchaseType: "mua_le", quantity: 1, price: 0, note: "" });

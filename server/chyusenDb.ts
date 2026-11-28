@@ -542,6 +542,45 @@ export async function markChyusenPurchaseCreated(userId: number, entryId: number
   await writeChyusenActivity(userId, "chyusen_purchase_linked", entryId, `Xác nhận mua hàng từ Chyusen: ${entry.title}`, chyusenActivitySnapshot(entry), { ...chyusenActivitySnapshot(entry), purchaseCreatedAt: new Date().toISOString() });
 }
 
+export async function undoChyusenPurchaseCreated(userId: number, entryId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [entry] = await db.select().from(chyusenEntries)
+    .where(and(eq(chyusenEntries.id, entryId), eq(chyusenEntries.userId, userId))).limit(1);
+  if (!entry) throw new Error("Chương trình Chyusen không tồn tại hoặc không thuộc tài khoản này.");
+  if (!entry.purchaseCreatedAt) throw new Error("Chyusen này chưa được chuyển sang Mua Hàng.");
+  const wasDeleted = Boolean(entry.deletedAt);
+  await db.update(chyusenEntries)
+    .set({ purchaseCreatedAt: null, ...(wasDeleted ? { deletedAt: null } : {}) })
+    .where(eq(chyusenEntries.id, entryId));
+  if (wasDeleted) {
+    await db.update(chyusenNotifications).set({ deletedAt: null }).where(and(eq(chyusenNotifications.userId, userId), eq(chyusenNotifications.entryId, entryId)));
+    const pausedSources = await db.select().from(chyusenSources)
+      .where(and(eq(chyusenSources.userId, userId), eq(chyusenSources.entryId, entryId), eq(chyusenSources.pausedByEntryDelete, 1)));
+    await Promise.all(pausedSources.map((source) => {
+      const shouldResume = source.activeBeforeEntryDelete ?? 1;
+      return db.update(chyusenSources).set({
+        isActive: shouldResume,
+        pausedByEntryDelete: 0,
+        activeBeforeEntryDelete: null,
+        nextCheckAt: shouldResume ? new Date() : source.nextCheckAt,
+      }).where(eq(chyusenSources.id, source.id));
+    }));
+    await markLatestTrashItemRestored(userId, "chyusen", entryId);
+  }
+  await db.insert(chyusenHistory).values({
+    userId,
+    entryId,
+    fieldName: "purchaseCreatedAt",
+    oldValue: serialize(entry.purchaseCreatedAt),
+    newValue: null,
+    changeSource: "manual",
+  });
+  const restoredEntry = { ...entry, purchaseCreatedAt: null, deletedAt: null };
+  await writeChyusenActivity(userId, "chyusen_purchase_unlinked", entryId, `Hoàn tác chuyển Mua Hàng từ Chyusen: ${entry.title}`, chyusenActivitySnapshot(entry), chyusenActivitySnapshot(restoredEntry));
+  return { id: entryId, title: entry.title, restored: wasDeleted };
+}
+
 export async function listChyusenNotifications(userId: number) {
   const db = await getDb();
   if (!db) return [];
